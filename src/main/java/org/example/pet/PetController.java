@@ -25,6 +25,13 @@ public class PetController {
         return petService.findById(id);
     }
 
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Pet createPet(@Valid @RequestBody CreatePetRequest request){
+        Pet pet = petService.create(request);
+        return pet;
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePet(@PathVariable Long id){

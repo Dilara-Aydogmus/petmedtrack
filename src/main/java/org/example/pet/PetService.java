@@ -1,4 +1,5 @@
 package org.example.pet;
+import org.example.common.ResourceNotFoundException;
 import org.example.pet.dto.CreatePetRequest;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -13,16 +14,23 @@ public class PetService {
     }
 
     public List<Pet> findAll() {
-        return petRepository.findAll();
+        List<Pet> pets = petRepository.findAll();
+        return pets;
     }
 
     public Pet findById(Long id) {
-        return petRepository.findById(id).orElseThrow(()-> new RuntimeException("Pet not found: " + id));
+        Pet pet = petRepository.findPet(id);
+        if(pet == null) {
+            String errorMessage = "Pet not found:" + id;
+            throw new ResourceNotFoundException(errorMessage);
+        }
+        return pet;
     }
 
     public Pet create(CreatePetRequest request){
         Pet pet = new Pet(request.getName(), request.getSpecies(), request.getBreed(), request.getBirthDate());
-        return save(pet);
+        Pet savedPet = save(pet);
+        return savedPet;
     }
     public Pet save(Pet pet) {
         return petRepository.save(pet);
@@ -36,7 +44,8 @@ public class PetService {
         pet.setBreed(request.getBreed());
         pet.setBirthDate(request.getBirthDate());
 
-        return save(pet);
+        Pet updatedPet = save(pet);
+        return updatedPet;
     }
 
     public void deleteById(Long id) {
