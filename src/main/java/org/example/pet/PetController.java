@@ -1,4 +1,5 @@
 package org.example.pet;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -21,4 +22,11 @@ public class PetController {
     public Pet getPetById(@PathVariable Long id) {
         return petService.findById(id);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePet(@PathVariable Long id){
+        petService.deleteById(id);
+    }
+
 }

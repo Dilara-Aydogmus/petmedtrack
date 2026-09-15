@@ -1,4 +1,5 @@
 package org.example.pet;
+import org.example.pet.dto.CreatePetRequest;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -19,6 +20,10 @@ public class PetService {
         return petRepository.findById(id).orElseThrow(()-> new RuntimeException("Pet not found: " + id));
     }
 
+    public Pet create(CreatePetRequest request){
+        Pet pet = new Pet(request.getName(), request.getSpecies(), request.getBreed(), request.getBirthDate());
+        return save(pet);
+    }
     public Pet save(Pet pet) {
         return petRepository.save(pet);
     }
