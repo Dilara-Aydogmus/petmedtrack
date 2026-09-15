@@ -28,6 +28,17 @@ public class PetService {
         return petRepository.save(pet);
     }
 
+    public Pet update(Long id, CreatePetRequest request) {
+        Pet pet = findById(id);
+
+        pet.setName(request.getName());
+        pet.setSpecies(request.getSpecies());
+        pet.setBreed(request.getBreed());
+        pet.setBirthDate(request.getBirthDate());
+
+        return save(pet);
+    }
+
     public void deleteById(Long id) {
         petRepository.deleteById(id);
     }

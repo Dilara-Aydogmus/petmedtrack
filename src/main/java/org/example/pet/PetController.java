@@ -1,4 +1,6 @@
 package org.example.pet;
+import jakarta.validation.Valid;
+import org.example.pet.dto.CreatePetRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -27,6 +29,11 @@ public class PetController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePet(@PathVariable Long id){
         petService.deleteById(id);
+    }
+
+    @PutMapping("/{id}")
+    public Pet updatePet(@PathVariable Long id, @Valid @RequestBody CreatePetRequest request){
+        return petService.update(id, request);
     }
 
 }
