@@ -1,5 +1,7 @@
 package org.example.pet;
 import org.example.common.ResourceNotFoundException;
+import org.example.owner.Owner;
+import org.example.owner.OwnerService;
 import org.example.pet.dto.CreatePetRequest;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -8,9 +10,11 @@ import java.util.List;
 public class PetService {
 
     private final PetRepository petRepository;
+    private final OwnerService ownerService;
 
-    public PetService(PetRepository petRepository){
+    public PetService(PetRepository petRepository, OwnerService ownerService){
         this.petRepository = petRepository;
+        this.ownerService = ownerService;
     }
 
     public List<Pet> findAll() {
@@ -28,7 +32,8 @@ public class PetService {
     }
 
     public Pet create(CreatePetRequest request){
-        Pet pet = new Pet(request.getName(), request.getSpecies(), request.getBreed(), request.getBirthDate());
+        Owner owner = ownerService.findById(request.getOwnerId());
+        Pet pet = new Pet(request.getName(), request.getSpecies(), request.getBreed(), request.getBirthDate(), owner);
         Pet savedPet = save(pet);
         return savedPet;
     }
@@ -38,7 +43,8 @@ public class PetService {
 
     public Pet update(Long id, CreatePetRequest request) {
         Pet pet = findById(id);
-
+        Owner owner = ownerService.findById(request.getOwnerId());
+        pet.setOwner(owner);
         pet.setName(request.getName());
         pet.setSpecies(request.getSpecies());
         pet.setBreed(request.getBreed());

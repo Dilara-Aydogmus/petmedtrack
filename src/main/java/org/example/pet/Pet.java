@@ -1,6 +1,16 @@
 package org.example.pet;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.example.owner.Owner;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -25,15 +35,20 @@ public class Pet {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private Owner owner;
+
     protected Pet(){
 
     }
 
-    public Pet(String name, String species, String breed, LocalDate birthDate){
+    public Pet(String name, String species, String breed, LocalDate birthDate, Owner owner){
           this.name = name;
           this.species = species;
           this.breed = breed;
           this.birthDate = birthDate;
+          this.owner = owner;
           this.createdAt = LocalDateTime.now();
     }
 
@@ -68,6 +83,10 @@ public class Pet {
 
     public void setBirthDate(LocalDate birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public void setOwner(Owner owner){
+        this.owner = owner;
     }
 }
 

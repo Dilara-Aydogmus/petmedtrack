@@ -3,6 +3,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDate;
+import jakarta.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -18,4 +19,7 @@ public class CreatePetRequest {
     private String breed;
 
     private LocalDate birthDate;
+
+    @NotNull(message = "Owner id is required")
+    private Long ownerId;
 }
