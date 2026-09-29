@@ -55,7 +55,13 @@ public class PetService {
     }
 
     public void deleteById(Long id) {
+        findById(id);
         petRepository.deleteById(id);
+    }
+
+    public List<Pet> findByOwnerId(Long ownerId){
+        ownerService.findById(ownerId);
+        return petRepository.findByOwnerId(ownerId);
     }
 }
 

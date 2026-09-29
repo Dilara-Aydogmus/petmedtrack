@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.example.auth.dto.LoginRequest;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.example.auth.dto.UserResponse;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -19,9 +21,10 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public User register(@Valid @RequestBody CreateUserRequest request){
+    public UserResponse register(@Valid @RequestBody CreateUserRequest request){
         User user = new User(request.getUsername(), request.getPassword(), request.getRole());
-        return userService.save(user);
+        User savedUser = userService.save(user);
+        return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole());
     }
 
     @PostMapping("/login")

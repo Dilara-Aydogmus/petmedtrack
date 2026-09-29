@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.example.treatment.dto.UpdateTreatmentRequest;
 
+import java.time.LocalDate;
+
 @Service
 public class TreatmentService {
     private final TreatmentRepository treatmentRepository;
@@ -33,6 +35,9 @@ public class TreatmentService {
         return treatment;
     }
     public Treatment create(CreateTreatmentRequest request){
+        if(request.getEndDate() != null && request.getEndDate().isBefore(request.getStartDate())){
+            throw new IllegalArgumentException("End date cannot be before start date");
+        }
         Pet pet = petService.findById(request.getPetId());
         Medication medication = medicationService.findById(request.getMedicationId());
 
@@ -43,6 +48,15 @@ public class TreatmentService {
 
     public Treatment update(Long id, UpdateTreatmentRequest request){
         Treatment treatment= findById(id);
+        LocalDate startDate = request.getStartDate() != null
+                ? request.getStartDate()
+                : treatment.getStartDate();
+        LocalDate endDate = request.getEndDate() != null
+                ? request.getEndDate()
+                : treatment.getEndDate();
+        if(endDate != null && endDate.isBefore(startDate)){
+            throw new IllegalArgumentException("End date cannot be before start date");
+        }
 
         if(request.getPetId() != null){
             Pet pet = petService.findById(request.getPetId());
@@ -73,6 +87,11 @@ public class TreatmentService {
     public void deleteById(Long id){
         findById(id);
         treatmentRepository.deleteById(id);
+    }
+
+    public List<Treatment> findByPetId(Long petId){
+        petService.findById(petId);
+        return treatmentRepository.findByPetId(petId);
     }
 
 }

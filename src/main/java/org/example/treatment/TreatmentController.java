@@ -41,5 +41,12 @@ public class TreatmentController {
     public void deleteTreatment(@PathVariable Long id){
         treatmentService.deleteById(id);
     }
+
+    @GetMapping("/pet/{petId}")
+    public List<Treatment> getTreatmentsByPet(@PathVariable Long petId){
+        return treatmentService.findByPetId(petId);
+    }
+
 }
+
 

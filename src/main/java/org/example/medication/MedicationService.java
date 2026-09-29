@@ -35,16 +35,23 @@ public class MedicationService {
     }
 
     public void deleteById(Long id){
+        findById(id);
     medicationRepository.deleteById(id);
     }
 
     public Medication create(CreateMedicationRequest request){
+        if (medicationRepository.existsByName(request.getName())){
+            throw new IllegalArgumentException("Medication name already exists");
+        }
         Medication medication = new Medication(request.getName());
         return save(medication);
     }
 
     public Medication update(Long id, CreateMedicationRequest request){
         Medication medication = findById(id);
+        if (medicationRepository.existsByNameAndIdNot(request.getName(), id)){
+            throw new IllegalArgumentException("Medication name already exists");
+        }
         medication.setName(request.getName());
         return save(medication);
     }

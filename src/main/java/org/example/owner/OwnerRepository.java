@@ -2,4 +2,9 @@ package org.example.owner;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OwnerRepository extends JpaRepository<Owner, Long> {
+    boolean existsByEmail(String email);
+    boolean existsByPhoneNumber(String phoneNumber);
+    boolean existsByEmailAndIdNot(String email, Long id);
+    boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
+
 }

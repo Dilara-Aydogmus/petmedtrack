@@ -30,4 +30,10 @@ public class GlobalExceptionHandler {
 
         return message;
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handleConflict(IllegalArgumentException exception){
+        return exception.getMessage();
+    }
 }

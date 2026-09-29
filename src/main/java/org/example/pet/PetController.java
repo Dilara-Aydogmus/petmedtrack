@@ -42,5 +42,9 @@ public class PetController {
     public Pet updatePet(@PathVariable Long id, @Valid @RequestBody CreatePetRequest request){
         return petService.update(id, request);
     }
+    @GetMapping("/owner/{ownerId}")
+    public List<Pet> getPetsByOwner(@PathVariable Long ownerId){
+        return petService.findByOwnerId(ownerId);
+    }
 
 }

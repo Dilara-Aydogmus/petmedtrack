@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 public class OwnerService {
     private final OwnerRepository ownerRepository;
+
     public OwnerService(OwnerRepository ownerRepository) {
         this.ownerRepository = ownerRepository;
     }
@@ -29,20 +31,33 @@ public class OwnerService {
     }
 
     public Owner create(CreateOwnerRequest request){
+        if (ownerRepository.existsByEmail(request.getEmail())){
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if (ownerRepository.existsByPhoneNumber(request.getPhoneNumber())){
+            throw new IllegalArgumentException("Phone number already exists");
+        }
         Owner owner = new Owner(request.getFirstName(), request.getLastName(), request.getEmail(), request.getPhoneNumber());
-        Owner savedOwner = save(owner);
-        return savedOwner;
+        return save(owner);
     }
 
     public Owner update(Long id, CreateOwnerRequest request){
         Owner owner = findById(id);
+
+        if(ownerRepository.existsByEmailAndIdNot(request.getEmail(), id)){
+            throw new IllegalArgumentException("Email already exists");
+        }
+
+        if(ownerRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), id)){
+            throw new IllegalArgumentException("Phone number already exists");}
+
         owner.setFirstName(request.getFirstName());
         owner.setLastName(request.getLastName());
         owner.setEmail(request.getEmail());
         owner.setPhoneNumber(request.getPhoneNumber());
-        Owner updatedOwner = save(owner);
-        return updatedOwner;
+        return save(owner);
     }
+
     public Owner save(Owner owner){
         Owner savedOwner = ownerRepository.save(owner);
         return savedOwner;
@@ -50,6 +65,7 @@ public class OwnerService {
     }
 
     public void deleteById(Long id) {
+        findById(id);
         ownerRepository.deleteById(id);
     }
 

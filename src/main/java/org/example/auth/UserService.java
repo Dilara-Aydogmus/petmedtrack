@@ -17,7 +17,11 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
     public User save(User user){
+        if (userRepository.findByUsername(user.getUsername()).isPresent()){
+            throw new IllegalArgumentException("Username already exists");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }

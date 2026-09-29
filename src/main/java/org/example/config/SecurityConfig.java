@@ -19,6 +19,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/",
                         "/index.html",
                         "/style.css" ,
+                                "/app.js",
                                 "/api/auth/**").permitAll().anyRequest().authenticated()).httpBasic(Customizer.withDefaults());
         return http.build();
     }
