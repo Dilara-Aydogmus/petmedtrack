@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.security.config.Customizer;
 
+import org.springframework.http.HttpMethod;
+
 @Configuration
 public class SecurityConfig {
 
@@ -18,9 +20,14 @@ public class SecurityConfig {
         http    .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/",
                         "/index.html",
-                        "/style.css" ,
-                                "/app.js",
-                                "/api/auth/**").permitAll().anyRequest().authenticated()).httpBasic(Customizer.withDefaults());
+                        "/style.css",
+                        "app.js",
+                        "/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER","VET","ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/api/**").hasAnyRole("VET","ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("VET","ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("VET", "ADMIN")
+                        .anyRequest().authenticated());
         return http.build();
     }
 

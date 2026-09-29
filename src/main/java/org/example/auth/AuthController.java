@@ -22,7 +22,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody CreateUserRequest request){
-        User user = new User(request.getUsername(), request.getPassword(), request.getRole());
+        User user = new User(request.getUsername(), request.getPassword(), "USER");
         User savedUser = userService.save(user);
         return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getRole());
     }

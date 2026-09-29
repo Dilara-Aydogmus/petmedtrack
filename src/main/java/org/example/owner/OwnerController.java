@@ -26,8 +26,7 @@ public class OwnerController {
 
     @GetMapping
     public List<Owner> getAllOwners(){
-        List<Owner> owners = ownerService.findAll();
-        return owners;
+        return ownerService.findAll();
     }
 
     @GetMapping("/{id}")
@@ -55,3 +54,4 @@ public class OwnerController {
         ownerService.deleteById(id);
     }
 }
+

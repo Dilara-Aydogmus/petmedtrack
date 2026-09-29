@@ -32,7 +32,7 @@ public class TreatmentController {
     }
 
     @PatchMapping("/{id}")
-    public Treatment updateTreatment(@PathVariable Long id, @RequestBody UpdateTreatmentRequest request){
+    public Treatment updateTreatment(@PathVariable Long id,@Valid @RequestBody UpdateTreatmentRequest request){
         return treatmentService.update(id, request);
     }
 
