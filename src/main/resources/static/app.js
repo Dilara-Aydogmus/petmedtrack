@@ -11,7 +11,7 @@ const escapeHtml = (value) => String(value ?? "")
 async function request(url, options = {}, token = auth) {
     const headers = {
         ...(options.headers || {}),
-        Authorization: `Basic ${token}`
+        Authorization: `Bearer ${token}`
     };
 
     const response = await fetch(url, { ...options, headers });
@@ -71,12 +71,25 @@ function showLogin() {
 
         const username = document.getElementById("login-username").value.trim();
         const password = document.getElementById("login-password").value;
-        const candidate = btoa(`${username}:${password}`);
         const message = document.getElementById("login-message");
 
         try {
-            await request("/api/owners", {}, candidate);
-            auth = candidate;
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Kullanıcı adı veya şifre hatalı.");
+            }
+
+            auth = await response.text();
             sessionStorage.setItem("petmedtrack-auth", auth);
             loginScreen.remove();
             await initDashboard();
