@@ -10,13 +10,18 @@ import org.springframework.web.server.ResponseStatusException;
 
 import org.example.auth.dto.UserResponse;
 
+import org.example.security.JwtService;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
     private final UserService userService;
-    public AuthController(UserService userService){
+    private final JwtService jwtService;
+
+    public AuthController(UserService userService, JwtService jwtService){
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -39,7 +44,7 @@ public class AuthController {
         if(!isValid){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or password is incorrect");
         }
-        return "Login successful";
+        return jwtService.generateToken(request.getUsername());
     }
 
 }
