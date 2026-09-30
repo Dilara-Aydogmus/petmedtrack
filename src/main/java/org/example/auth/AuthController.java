@@ -27,7 +27,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@Valid @RequestBody CreateUserRequest request){
-        String role = request.getRole().toUpperCase();
+        String role = request.getRole().trim().toUpperCase();
 
         if (!role.equals("USER") && !role.equals("VET")) {
             throw new IllegalArgumentException("Role must be USER or VET");

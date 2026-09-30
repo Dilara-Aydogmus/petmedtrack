@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.example.owner.Owner;
 
 import java.time.LocalDate;
@@ -89,6 +90,7 @@ public class Pet {
         this.owner = owner;
     }
 
+    @JsonIgnore
     public Owner getOwner(){
         return owner;
     }

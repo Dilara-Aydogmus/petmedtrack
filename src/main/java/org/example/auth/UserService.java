@@ -43,10 +43,11 @@ public class UserService implements UserDetailsService {
         if (user == null){
             throw new UsernameNotFoundException("User not found");
         }
+        String role = user.getRole().trim().toUpperCase();
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword())
-                .roles(user.getRole())
+                .roles(role)
                 .build();
     }
 }

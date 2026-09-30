@@ -23,7 +23,8 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter){
                         "/index.html",
                         "/style.css",
                         "/app.js",
-                        "/api/auth/**").permitAll()
+                        "/api/auth/**",
+                        "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER","VET","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/**").hasAnyRole("VET","ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("VET","ADMIN")
