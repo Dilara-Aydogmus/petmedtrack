@@ -21,12 +21,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/",
                         "/index.html",
                         "/style.css",
-                        "app.js",
+                        "/app.js",
                         "/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER","VET","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/**").hasAnyRole("VET","ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("VET","ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/owners/*/activate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("VET", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/owners/*/permanent").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/**").hasAnyRole("VET", "ADMIN")
                         .anyRequest().authenticated());
         return http.build();
     }

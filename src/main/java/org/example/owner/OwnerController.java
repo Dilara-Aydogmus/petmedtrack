@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.PatchMapping;
 import java.util.List;
 
 @RestController
@@ -48,10 +48,22 @@ public class OwnerController {
         return updatedOwner;
     }
 
+    @DeleteMapping("/{id}/permanent")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void permanentlyDeleteOwner(@PathVariable Long id){
+        ownerService.permanentlyDeleteById(id);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteOwner(@PathVariable Long id){
-        ownerService.deleteById(id);
+        ownerService.deactivateById(id);
+    }
+
+    @PatchMapping("/{id}/activate")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void activateOwner(@PathVariable Long id){
+        ownerService.activateById(id);
     }
 }
 

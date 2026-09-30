@@ -32,6 +32,9 @@ public class Owner {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     public Owner(
             String firstName,
             String lastName,
@@ -43,6 +46,8 @@ public class Owner {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.createdAt = LocalDateTime.now();
+        this.active = true;
     }
+
 }
 

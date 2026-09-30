@@ -8,4 +8,5 @@ public interface TreatmentRepository extends JpaRepository<Treatment, Long> {
     @Query("SELECT treatment FROM Treatment treatment WHERE treatment.id = :id")
     Treatment findTreatment(@Param("id") Long id);
     List<Treatment> findByPetId(Long petId);
+    void deleteByPetId(Long petId);
 }
