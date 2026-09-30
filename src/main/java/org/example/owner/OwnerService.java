@@ -9,18 +9,21 @@ import org.example.pet.Pet;
 import org.example.pet.PetRepository;
 import org.example.treatment.TreatmentRepository;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.example.notification.EmailMessage;
+import org.example.notification.EmailProducer;
 
 @Service
 public class OwnerService {
     private final OwnerRepository ownerRepository;
     private final PetRepository petRepository;
     private final TreatmentRepository treatmentRepository;
+    private final EmailProducer emailProducer;
 
-    public OwnerService(OwnerRepository ownerRepository, PetRepository petRepository, TreatmentRepository treatmentRepository) {
+    public OwnerService(OwnerRepository ownerRepository, PetRepository petRepository, TreatmentRepository treatmentRepository, EmailProducer emailProducer) {
         this.ownerRepository = ownerRepository;
         this.petRepository = petRepository;
         this.treatmentRepository = treatmentRepository;
+        this.emailProducer = emailProducer;
     }
     public List<Owner> findAll() {
         return ownerRepository.findByActiveTrue();
@@ -46,7 +49,17 @@ public class OwnerService {
             throw new IllegalArgumentException("Phone number already exists");
         }
         Owner owner = new Owner(request.getFirstName(), request.getLastName(), request.getEmail(), request.getPhoneNumber());
-        return save(owner);
+        Owner savedOwner = save(owner);
+
+        EmailMessage emailMessage = new EmailMessage(savedOwner.getEmail(),"PetMedTrack'e hoş geldiniz",
+                "Merhaba" + savedOwner.getFirstName() + ",\n\n"
+                + "PetMedTrack hesabınız başarıyla oluşturuldu. \n\n"
+                + "Detayları görmek için sisteme giriş yapın.\n"
+                + "PetMedTrack Ekibi");
+        emailProducer.sendEmail(emailMessage);
+        return savedOwner;
+
+
     }
 
     public Owner update(Long id, CreateOwnerRequest request){
