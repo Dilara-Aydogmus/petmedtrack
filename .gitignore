@@ -39,3 +39,5 @@ build/
 .DS_Store
 
 .env
+out/base/app-secret.yaml
+petmedtrack-k8s.zip
