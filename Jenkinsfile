@@ -54,10 +54,13 @@ stage('Deploy to GKE') {
               $env:GKE_CLUSTER `
               --zone $env:GKE_ZONE
 
-            $image = "$env:IMAGE_REPOSITORY`:$env:BUILD_NUMBER"
+            $image = "$env:IMAGE_REPOSITORY`:latest"
 
             kubectl set image deployment/app `
               petmedtrack-app=$image `
+              --namespace $env:K8S_NAMESPACE
+
+            kubectl rollout restart deployment/app `
               --namespace $env:K8S_NAMESPACE
 
             kubectl rollout status deployment/app `
