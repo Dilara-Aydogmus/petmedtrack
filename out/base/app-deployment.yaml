@@ -1,0 +1,84 @@
+#! app-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: app
+    namespace: petmedtrack
+    labels:
+        com.docker.compose.project: petmedtrack
+        com.docker.compose.service: app
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: petmedtrack
+            com.docker.compose.service: app
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: petmedtrack
+                com.docker.compose.service: app
+                com.docker.compose.network.default: "true"
+        spec:
+            restartPolicy: Always
+            containers:
+                - name: petmedtrack-app
+                  image: dilaraydgms/petmedtrack:latest
+                  imagePullPolicy: IfNotPresent
+                  env:
+                    - name: DB_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: petmedtrack-secrets
+                          key: DB_PASSWORD
+                    - name: DB_USERNAME
+                      valueFrom:
+                        secretKeyRef:
+                          name: petmedtrack-secrets
+                          key: DB_USERNAME
+                    - name: JWT_EXPIRATION
+                      value: "86400000"
+                    - name: JWT_SECRET
+                      valueFrom:
+                        secretKeyRef:
+                          name: petmedtrack-secrets
+                          key: JWT_SECRET
+                    - name: MAIL_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: petmedtrack-secrets
+                          key: MAIL_PASSWORD
+                    - name: MAIL_USERNAME
+                      valueFrom:
+                        secretKeyRef:
+                          name: petmedtrack-secrets
+                          key: MAIL_USERNAME
+                    - name: SPRING_DATASOURCE_URL
+                      value: "jdbc:sqlserver://100.67.48.108:1433;databaseName=petmedtrack;encrypt=true;trustServerCertificate=true"
+                    - name: SPRING_RABBITMQ_HOST
+                      value: "rabbitmq"
+                    - name: SPRING_RABBITMQ_PASSWORD
+                      value: "guest"
+                    - name: SPRING_RABBITMQ_PORT
+                      value: "5672"
+                    - name: SPRING_RABBITMQ_USERNAME
+                      value: "guest"
+                    - name: SPRING_DATA_REDIS_HOST
+                      value: "redis"
+                    - name: SPRING_DATA_REDIS_PORT
+                      value: "6379"
+                    - name: JAVA_TOOL_OPTIONS
+                      value: "-Xms64m -Xmx192m -XX:MaxMetaspaceSize=96m"
+                  resources:
+                    requests:
+                      cpu: "50m"
+                      memory: "192Mi"
+                    limits:
+                      cpu: "400m"
+                      memory: "320Mi"
+                  ports:
+                    - name: app-8080
+                      containerPort: 8080

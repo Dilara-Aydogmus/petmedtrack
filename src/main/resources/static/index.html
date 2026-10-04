@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetMedTrack | Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<script src="/app.js"></script>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">✦</div>
+            <div>
+                <span class="brand-name">PetMedTrack</span>
+                <span class="brand-subtitle">care &amp; wellness</span>
+            </div>
+        </div>
+
+        <nav class="navigation" aria-label="Ana menü">
+            <a class="nav-item active" href="#dashboard"><span class="nav-icon">⌂</span> Genel Bakış</a>
+            <a class="nav-item" href="#pets"><span class="nav-icon">♧</span> Dostlarım</a>
+            <a class="nav-item" href="#treatments"><span class="nav-icon">✚</span> Tedaviler</a>
+            <a class="nav-item" href="#medications"><span class="nav-icon">◈</span> İlaçlar</a>
+            <a class="nav-item" href="#owners"><span class="nav-icon">♧</span> Sahipler</a>
+        </nav>
+
+        <div class="sidebar-note">
+            <span class="note-sparkle">✦</span>
+            <strong>Her pati<br>özel bakımı hak eder.</strong>
+            <span>Bugün küçük bir iyilik yap.</span>
+        </div>
+
+        <div class="profile-mini">
+            <div class="avatar">DA</div>
+            <div><strong>Dr. Dilara</strong><span>Veteriner kliniği</span></div>
+            <button class="more-button" aria-label="Daha fazla seçenek">•••</button>
+        </div>
+    </aside>
+
+    <main class="main-content" id="dashboard">
+        <header class="topbar">
+            <button class="mobile-menu" aria-label="Menüyü aç">☰</button>
+            <div class="breadcrumb"><span>PetMedTrack</span><b>/</b> Genel Bakış</div>
+            <div class="topbar-actions">
+                <button class="icon-button" aria-label="Bildirimler"><span class="notification-dot"></span>♢</button>
+                <div class="date-chip">28 Eylül 2026 <span>⌄</span></div>
+            </div>
+        </header>
+
+        <section class="welcome-row">
+            <div>
+                <p class="eyebrow">PAZARTESİ, 28 EYLÜL 2026</p>
+                <h1>Hoş geldin, Dilara <span>✦</span></h1>
+                <p class="intro">Bugün kliniğindeki minik dostların için güzel bir gün.</p>
+            </div>
+            <button id="open-owner-form" class="primary-button">+ Yeni sahip ekle</button>
+        </section>
+
+        <section class="stats-grid" aria-label="Özet bilgiler">
+            <article class="stat-card cream-card"><div class="stat-icon paw-icon">♧</div><div><span>Toplam dost</span><strong id="pet-count">0</strong><small><em>+3</em> bu ay</small></div></article>
+            <article class="stat-card pink-card"><div class="stat-icon">✚</div><div><span>Aktif tedavi</span><strong id = "treatment-count">0</strong><small><em>2</em> bugün bitecek</small></div></article>
+            <article class="stat-card green-card"><div class="stat-icon">◈</div><div><span>Kayıtlı ilaç</span><strong id = "medication-count">0</strong><small><em>+5</em> yeni eklendi</small></div></article>
+            <article class="stat-card plum-card"><div class="stat-icon">♧</div><div><span>Evcil hayvan sahibi</span><strong id="owner-count">0</strong><small><em>+2</em> bu hafta</small></div></article>
+        </section>
+
+        <section class="content-grid">
+            <article class="panel treatments-panel" id="treatments">
+                <div class="panel-heading"><div><p class="eyebrow">TAKİP LİSTESİ</p><h2>Son tedaviler</h2></div><a href="#all-treatments">Tümünü gör <span>→</span></a></div>
+                <div class="table-wrap"><table><thead><tr><th>Hasta</th><th>İlaç</th><th>Doz / Sıklık</th><th>Durum</th></tr></thead><tbody id ="treatments-body">
+                    <tr><td><div class="patient"><span class="patient-avatar peach">M</span><div><strong>Maya</strong><small>Kedi · Tekir</small></div></div></td><td>Amoksisilin</td><td>2 ml · Günde 2</td><td><span class="status active-status">Aktif</span></td></tr>
+                    <tr><td><div class="patient"><span class="patient-avatar lavender">B</span><div><strong>Boncuk</strong><small>Köpek · Pomeranian</small></div></div></td><td>Vitamin B12</td><td>1 tablet · Günde 1</td><td><span class="status soon-status">Yaklaşıyor</span></td></tr>
+                    <tr><td><div class="patient"><span class="patient-avatar sage">L</span><div><strong>Loki</strong><small>Kedi · British Shorthair</small></div></div></td><td>Metronidazol</td><td>5 ml · Günde 1</td><td><span class="status completed-status">Tamamlandı</span></td></tr>
+                </tbody></table></div>
+            </article>
+
+            <article class="panel calendar-panel">
+                <div class="panel-heading"><div><p class="eyebrow">BUGÜN</p><h2>Takvim</h2></div><button class="round-button" aria-label="Takvimi aç">↗</button></div>
+                <div class="calendar-date"><strong>28</strong><div><span>Eylül</span><small>Pazartesi</small></div></div>
+                <div class="calendar-line"><span class="time">10:30</span><div class="appointment"><strong>Maya’nın kontrolü</strong><span>Genel sağlık kontrolü</span></div></div>
+                <div class="calendar-line"><span class="time">14:00</span><div class="appointment green-appointment"><strong>Boncuk · İlaç takibi</strong><span>Doz kontrolü</span></div></div>
+                <button class="secondary-button">Takvime git <span>→</span></button>
+            </article>
+        </section>
+
+        <section class="bottom-grid">
+            <article class="quote-card"><span class="quote-mark">“</span><p>Sevgiyle yapılan her bakım, daha sağlıklı bir yarın demek.</p><span class="quote-author">— PetMedTrack notu</span><span class="quote-flower">✿</span></article>
+            <article class="panel quick-panel"><div class="panel-heading"><div><p class="eyebrow">HIZLI ERİŞİM</p><h2>Yeni ekle</h2></div></div><div class="quick-actions"><a href="#pet-form"><span>♧</span><strong>Hayvan</strong><small>Yeni hasta kaydı</small></a><a href="#new-medication"><span>◈</span><strong>İlaç</strong><small>İlaç listesine ekle</small></a><a href="#new-treatment"><span>✚</span><strong>Tedavi</strong><small>Yeni tedavi planı</small></a></div></article>
+        </section>
+
+        <section class="panel" id="owner-form">
+            <h2>Yeni sahip ekle</h2>
+
+            <form id="create-owner-form">
+                <input id="first-name" placeholder="Ad" required>
+                <input id="last-name" placeholder="Soyad" required>
+                <input id="email" type="email" placeholder="E-posta" required>
+                <input id="phone-number" placeholder="Telefon" required>
+
+                <button type="submit" class="primary-button">
+                    Sahibi kaydet
+                </button>
+            </form>
+
+            <p id="owner-message"></p>
+        </section>
+
+        <section class="panel" id="pet-form">
+            <h2>Yeni hayvan ekle</h2>
+
+            <form id="create-pet-form">
+                <input id="pet-name" placeholder="Hayvan adı" required>
+                <input id="species" placeholder="Tür" required>
+                <input id="breed" placeholder="Irk">
+                <input id="birth-date" type="date">
+                <input id="owner-id" type="number" placeholder="Sahip ID" required>
+
+                <button type="submit" class="primary-button">
+                    Hayvanı kaydet
+                </button>
+            </form>
+
+            <p id="pet-message"></p>
+        </section>
+
+        <section class="panel" id="medication-form">
+            <span id="new-medication"></span>
+            <h2>Yeni ilaç ekle</h2>
+
+            <form id="create-medication-form">
+                <input
+                        id="medication-name"
+                        placeholder="İlaç adı"
+                        required
+                >
+
+                <button type="submit" class="primary-button">
+                    İlacı kaydet
+                </button>
+            </form>
+
+            <p id="medication-message"></p>
+        </section>
+
+        <section class="panel" id="treatment-form">
+            <span id="new-treatment"></span>
+            <h2>Yeni tedavi ekle</h2>
+
+            <form id="create-treatment-form">
+                <input id="treatment-pet-id" type="number" placeholder="Hayvan ID" required>
+                <input id="treatment-medication-id" type="number" placeholder="İlaç ID" required>
+                <input id="dosage" placeholder="Doz" required>
+                <input id="frequency" placeholder="Sıklık" required>
+                <input id="start-date" type="date" required>
+                <input id="end-date" type="date">
+
+                <button type="submit" class="primary-button">
+                    Tedaviyi kaydet
+                </button>
+            </form>
+
+            <p id="treatment-message"></p>
+        </section>
+
+    </main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

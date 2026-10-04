@@ -1,0 +1,9 @@
+#! rabbitmq-rabbitmq-data-persistentVolumeClaim.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: rabbitmq-rabbitmq-data
+    namespace: petmedtrack
+spec:
+    storageClassName: "hostpath" # see docker/desktop-storage-provisioner
