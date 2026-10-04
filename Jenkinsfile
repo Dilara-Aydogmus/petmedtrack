@@ -66,3 +66,5 @@ stage('Deploy to GKE') {
         '''
     }
 }
+    }
+}
