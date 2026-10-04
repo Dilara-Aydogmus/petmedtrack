@@ -6,6 +6,7 @@ import org.example.medication.MedicationService;
 import org.example.pet.Pet;
 import org.example.pet.PetService;
 import org.example.treatment.dto.CreateTreatmentRequest;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -14,6 +15,9 @@ import org.example.treatment.dto.UpdateTreatmentRequest;
 import java.time.LocalDate;
 import org.example.notification.EmailMessage;
 import org.example.notification.EmailProducer;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class TreatmentService {
@@ -29,10 +33,12 @@ public class TreatmentService {
         this.emailProducer = emailProducer;
     }
 
+    @Cacheable(value = "treatments")
     public List<Treatment> findAll() {
         return treatmentRepository.findAll();
     }
 
+    @Cacheable(value = "treatments", key = "#id")
     public Treatment findById(Long id) {
         Treatment treatment = treatmentRepository.findTreatment(id);
         if (treatment == null) {
@@ -41,6 +47,10 @@ public class TreatmentService {
         return treatment;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
     public Treatment create(CreateTreatmentRequest request) {
         if (request.getEndDate() != null && request.getEndDate().isBefore(request.getStartDate())) {
             throw new IllegalArgumentException("End date cannot be before start date");
@@ -62,6 +72,10 @@ public class TreatmentService {
         return savedTreatment;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
     public Treatment update(Long id, UpdateTreatmentRequest request){
         Treatment treatment= findById(id);
         LocalDate startDate = request.getStartDate() != null
@@ -116,11 +130,16 @@ public class TreatmentService {
     }
 
 
+    @Caching(evict = {
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
     public void deleteById(Long id){
         findById(id);
         treatmentRepository.deleteById(id);
     }
 
+    @Cacheable(value = "treatmentsByPet", key = "#petId")
     public List<Treatment> findByPetId(Long petId){
         petService.findById(petId);
         return treatmentRepository.findByPetId(petId);

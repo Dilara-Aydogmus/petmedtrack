@@ -19,6 +19,7 @@ services:
     restart: unless-stopped
     depends_on:
       - rabbitmq
+      - redis
     ports:
       - "8080:8080"
     environment:
@@ -33,7 +34,15 @@ services:
         SPRING_RABBITMQ_PORT: 5672
         SPRING_RABBITMQ_USERNAME: guest
         SPRING_RABBITMQ_PASSWORD: guest
+        SPRING_DATA_REDIS_HOST: redis
+        SPRING_DATA_REDIS_PORT: 6379
 
+  redis:
+    image: redis:7-alpine
+    container_name: petmedtrack-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
 
 volumes:
   rabbitmq-data:

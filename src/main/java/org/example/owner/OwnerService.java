@@ -2,6 +2,7 @@ package org.example.owner;
 import org.example.common.ResourceNotFoundException;
 import org.example.owner.dto.CreateOwnerRequest;
 import org.example.treatment.Treatment;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +12,8 @@ import org.example.treatment.TreatmentRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.notification.EmailMessage;
 import org.example.notification.EmailProducer;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 @Service
 public class OwnerService {
@@ -25,10 +28,12 @@ public class OwnerService {
         this.treatmentRepository = treatmentRepository;
         this.emailProducer = emailProducer;
     }
+    @Cacheable(value = "owners")
     public List<Owner> findAll() {
         return ownerRepository.findByActiveTrue();
     }
 
+    @Cacheable(value = "owners", key = "#id")
     public Owner findById(Long id){
         Optional<Owner> ownerOptional = ownerRepository.findById(id);
 
@@ -41,6 +46,7 @@ public class OwnerService {
         return owner;
     }
 
+    @CacheEvict(value = "owners", allEntries = true)
     public Owner create(CreateOwnerRequest request){
         if (ownerRepository.existsByEmail(request.getEmail())){
             throw new IllegalArgumentException("Email already exists");
@@ -62,6 +68,7 @@ public class OwnerService {
 
     }
 
+    @CacheEvict(value = "owners", allEntries = true)
     public Owner update(Long id, CreateOwnerRequest request){
         Owner owner = findById(id);
 
@@ -85,11 +92,14 @@ public class OwnerService {
 
     }
 
+    @CacheEvict(value = "owners", allEntries = true)
     public void deactivateById(Long id) {
     Owner owner = findById(id);
     owner.setActive(false);
     ownerRepository.save(owner);
     }
+
+    @CacheEvict(value = "owners", allEntries = true)
     public void activateById(Long id) {
         Optional<Owner> ownerOptional = ownerRepository.findById(id);
         if(ownerOptional.isEmpty()){
@@ -100,6 +110,13 @@ public class OwnerService {
         ownerRepository.save(owner);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "owners", allEntries = true),
+            @CacheEvict(value = "pets", allEntries = true),
+            @CacheEvict(value = "petsByOwner", allEntries = true),
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
     @Transactional
     public void permanentlyDeleteById(Long id){
         Optional<Owner> ownerOptional = ownerRepository.findById(id);
