@@ -41,3 +41,4 @@ build/
 .env
 out/base/app-secret.yaml
 petmedtrack-k8s.zip
+jenkins*.war
