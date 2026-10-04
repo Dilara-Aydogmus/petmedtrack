@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Build and test') {
             steps {
-                powershell '.\\mvnw.cmd -B clean package'
+                powershell 'mvn -B clean package'
             }
         }
 
