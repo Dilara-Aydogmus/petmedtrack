@@ -23,11 +23,13 @@ spec:
                 com.docker.compose.service: app
                 com.docker.compose.network.default: "true"
         spec:
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
             restartPolicy: Always
             containers:
                 - name: petmedtrack-app
                   image: dilaraydgms/petmedtrack:latest
-                  imagePullPolicy: IfNotPresent
+                  imagePullPolicy: Always
                   env:
                     - name: DB_PASSWORD
                       valueFrom:
@@ -59,7 +61,9 @@ spec:
                     - name: SPRING_DATASOURCE_URL
                       value: "jdbc:sqlserver://100.67.48.108:1433;databaseName=petmedtrack;encrypt=true;trustServerCertificate=true"
                     - name: SPRING_RABBITMQ_HOST
-                      value: "rabbitmq"
+                      value: "rabbitmq-published"
+                    - name: SERVER_PORT
+                      value: "8081"
                     - name: SPRING_RABBITMQ_PASSWORD
                       value: "guest"
                     - name: SPRING_RABBITMQ_PORT
@@ -80,5 +84,5 @@ spec:
                       cpu: "400m"
                       memory: "320Mi"
                   ports:
-                    - name: app-8080
-                      containerPort: 8080
+                    - name: app-8081
+                      containerPort: 8081

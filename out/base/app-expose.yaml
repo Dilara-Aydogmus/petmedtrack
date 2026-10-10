@@ -15,4 +15,4 @@ spec:
     ports:
         - name: app-8080
           port: 8080
-          targetPort: app-8080
+          targetPort: 8081

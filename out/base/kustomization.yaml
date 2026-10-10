@@ -14,3 +14,4 @@ resources:
     - rabbitmq-service.yaml
     - redis-deployment.yaml
     - redis-service.yaml
+    - notification-deployment.yaml
