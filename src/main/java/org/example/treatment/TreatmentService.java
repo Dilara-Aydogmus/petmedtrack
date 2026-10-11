@@ -129,6 +129,36 @@ public class TreatmentService {
         return savedTreatment;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
+    public Treatment complete(Long id){
+        Treatment treatment = findById(id);
+        treatment.complete();
+        return treatmentRepository.save(treatment);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
+    public Treatment cancel(Long id){
+        Treatment treatment = findById(id);
+        treatment.cancel();
+        return treatmentRepository.save(treatment);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = "treatments", allEntries = true),
+            @CacheEvict(value = "treatmentsByPet", allEntries = true)
+    })
+    public Treatment reactivate(Long id){
+        Treatment treatment = findById(id);
+        treatment.reactivate();
+        return treatmentRepository.save(treatment);
+    }
+
 
     @Caching(evict = {
             @CacheEvict(value = "treatments", allEntries = true),

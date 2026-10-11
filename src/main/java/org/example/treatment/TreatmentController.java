@@ -36,6 +36,21 @@ public class TreatmentController {
         return treatmentService.update(id, request);
     }
 
+    @PatchMapping("/{id}/complete")
+    public Treatment completeTreatment(@PathVariable Long id){
+        return treatmentService.complete(id);
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public Treatment cancelTreatment(@PathVariable Long id){
+        return treatmentService.cancel(id);
+    }
+
+    @PatchMapping("/{id}/reactivate")
+    public Treatment reactivateTreatment(@PathVariable Long id){
+        return treatmentService.reactivate(id);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTreatment(@PathVariable Long id){
