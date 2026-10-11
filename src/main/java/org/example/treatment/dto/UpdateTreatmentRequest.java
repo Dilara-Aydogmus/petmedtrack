@@ -1,25 +1,23 @@
 package org.example.treatment.dto;
+
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
 
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class UpdateTreatmentRequest {
-    @Positive(message = "Pet id must be positive")
     private Long petId;
-    @Positive(message = "Medication id must be positive")
-    private Long medicationId;
-    @Size(max = 100, message= "Dosage cannot exceed 100 characters")
-    private String dosage;
-    @Size(max = 100, message = "Frequency cannot exceed 100 characters")
-    private String frequency;
+    private Set<Long> diseaseIds;
+    @Valid
+    private List<TreatmentMedicationRequest> medications;
     private LocalDate startDate;
     private LocalDate endDate;
-
 }

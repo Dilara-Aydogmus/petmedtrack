@@ -14,6 +14,9 @@ import org.example.notification.EmailMessage;
 import org.example.notification.EmailProducer;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.example.owner.specification.OwnerActiveSpecification;
+import org.example.owner.specification.OwnerNameSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 public class OwnerService {
@@ -134,5 +137,13 @@ public class OwnerService {
         }
         petRepository.deleteAll(pets);
         ownerRepository.delete(owner);
+    }
+
+    public List<Owner> search(String name, Boolean active) {
+        Specification<Owner> specification =
+                new OwnerNameSpecification(name)
+                        .and(new OwnerActiveSpecification(active));
+
+        return ownerRepository.findAll(specification);
     }
 }

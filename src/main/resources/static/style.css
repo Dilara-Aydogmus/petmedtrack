@@ -42,6 +42,17 @@ a { color:inherit; text-decoration:none; }
 @media (max-width:1050px) { .sidebar { width:210px; }.main-content { width:calc(100% - 210px); margin-left:210px; padding:0 25px 40px; }.stats-grid { grid-template-columns:repeat(2,1fr); }.content-grid { grid-template-columns:1fr; } }
 @media (max-width:700px) { .sidebar { position:fixed; left:-252px; width:252px; transition:.25s; }.main-content { width:100%; margin-left:0; padding:0 17px 30px; }.topbar { height:68px; }.mobile-menu { display:block; margin-right:12px; color:var(--plum); background:none; border:0; font-size:20px; }.breadcrumb { margin-right:auto; }.breadcrumb b, .breadcrumb span { display:none; }.date-chip { display:none; }.welcome-row { display:block; padding:34px 0 26px; }.welcome-row h1 { font-size:30px; }.primary-button { width:100%; margin-top:23px; }.stats-grid { gap:10px; }.stat-card { min-height:105px; padding:13px; gap:9px; }.stat-icon { width:31px; height:31px; font-size:15px; }.stat-card strong { font-size:23px; }.panel { padding:18px 14px; }.bottom-grid { grid-template-columns:1fr; }.quick-actions { grid-template-columns:1fr 1fr 1fr; gap:7px; }.quick-actions a { padding:11px 9px; }.quick-actions small { font-size:8px; } }
 
+@media (max-width:700px) { .search-grid { grid-template-columns:1fr; }.search-form { display:grid; grid-template-columns:1fr; }.search-form .primary-button { width:100%; } .search-result { display:block; }.search-result small { display:block; margin-top:4px; text-align:left; } }
+
+#treatment-form { display: none; }
+#disease-form, #treatment-plan-form { margin-top: 20px; }
+#create-disease-form, #create-treatment-plan-form { display: grid; gap: 12px; margin-top: 18px; }
+#create-disease-form input, #create-treatment-plan-form input { padding: 11px 12px; color: var(--black); background: #FFFDFC; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.treatment-medication-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+#add-plan-medication { margin: 0; }
+
+.search-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin-top:22px; }.search-form { display:flex; gap:10px; margin-top:20px; }.search-form input, .search-form select { min-width:0; flex:1; padding:11px 12px; color:var(--black); background:#FFFDFC; border:1px solid var(--line); border-radius:8px; font:inherit; }.search-form input:focus, .search-form select:focus { outline:2px solid rgba(183,129,151,.25); border-color:var(--dusty-pink); }.search-form .primary-button { margin-top:0; padding:10px 18px; }.search-results { display:grid; gap:8px; margin-top:16px; }.search-result { display:flex; justify-content:space-between; gap:12px; padding:11px 12px; background:#F4ECE8; border-radius:9px; font-size:11px; }.search-result small { color:var(--muted); text-align:right; }
+
 #owner-form {
     margin-top: 20px;
 }

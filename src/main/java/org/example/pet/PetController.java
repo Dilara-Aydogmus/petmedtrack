@@ -20,6 +20,11 @@ public class PetController {
         return petService.findAll();
     }
 
+    @GetMapping("/search")
+    public List<Pet> searchPets(@RequestParam(required = false) String name, @RequestParam(required = false) String species){
+        return petService.search(name,species);
+    }
+
     @GetMapping("/{id}")
     public Pet getPetById(@PathVariable Long id) {
         return petService.findById(id);

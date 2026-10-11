@@ -140,7 +140,13 @@ async function loadDashboard() {
         const statusClass = isActive ? "active-status" : "completed-status";
         const petName = treatment.pet?.name || "Bilinmeyen hasta";
         const species = treatment.pet?.species || "-";
-        const medicationName = treatment.medication?.name || "-";
+        const medications = treatment.treatmentMedications || [];
+        const medicationName = medications.length === 0
+            ? "-"
+            : medications.map(item => item.medication?.name || "-").join(", ");
+        const dosage = medications.length === 0
+            ? "-"
+            : medications.map(item => `${item.dosage} · ${item.frequency}`).join(", ");
 
         const row = document.createElement("tr");
         row.innerHTML = `
@@ -173,6 +179,72 @@ async function submitForm(form, url, data, messageId) {
     } catch (error) {
         message.textContent = error.message;
     }
+}
+
+function renderOwnerSearchResults(owners) {
+    const results = document.getElementById("owner-search-results");
+
+    if (owners.length === 0) {
+        results.textContent = "Eslesen sahip bulunamadi.";
+        return;
+    }
+
+    results.innerHTML = owners.map(owner => `
+        <div class="search-result">
+            <strong>${escapeHtml(owner.firstName)} ${escapeHtml(owner.lastName)}</strong>
+            <small>${escapeHtml(owner.email)} · ${owner.active ? "Aktif" : "Pasif"}</small>
+        </div>
+    `).join("");
+}
+
+function renderPetSearchResults(pets) {
+    const results = document.getElementById("pet-search-results");
+
+    if (pets.length === 0) {
+        results.textContent = "Eslesen hayvan bulunamadi.";
+        return;
+    }
+
+    results.innerHTML = pets.map(pet => `
+        <div class="search-result">
+            <strong>${escapeHtml(pet.name)}</strong>
+            <small>${escapeHtml(pet.species)} · ${escapeHtml(pet.breed || "Irk bilgisi yok")}</small>
+        </div>
+    `).join("");
+}
+
+async function searchOwners() {
+    const params = new URLSearchParams();
+    const name = document.getElementById("owner-search-name").value.trim();
+    const active = document.getElementById("owner-search-active").value;
+
+    if (name) {
+        params.set("name", name);
+    }
+
+    if (active) {
+        params.set("active", active);
+    }
+
+    const owners = await request(`/api/owners/search?${params}`);
+    renderOwnerSearchResults(owners);
+}
+
+async function searchPets() {
+    const params = new URLSearchParams();
+    const name = document.getElementById("pet-search-name").value.trim();
+    const species = document.getElementById("pet-search-species").value.trim();
+
+    if (name) {
+        params.set("name", name);
+    }
+
+    if (species) {
+        params.set("species", species);
+    }
+
+    const pets = await request(`/api/pets/search?${params}`);
+    renderPetSearchResults(pets);
 }
 
 function attachFormHandlers() {
@@ -209,6 +281,53 @@ function attachFormHandlers() {
         }, "medication-message");
     });
 
+    document.getElementById("create-disease-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+        submitForm(event.target, "/api/diseases", {
+            name: document.getElementById("disease-name").value
+        }, "disease-message");
+    });
+
+    document.getElementById("add-plan-medication")?.addEventListener("click", () => {
+        const container = document.getElementById("plan-medications");
+        const row = document.createElement("div");
+        row.className = "treatment-medication-row";
+        row.innerHTML = `
+            <input class="plan-medication-id" type="number" placeholder="Ilac ID" required>
+            <input class="plan-dosage" placeholder="Doz" required>
+            <input class="plan-frequency" placeholder="Siklik" required>
+        `;
+        container.appendChild(row);
+    });
+
+    document.getElementById("create-treatment-plan-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const diseaseIds = document.getElementById("plan-disease-ids")
+            .value
+            .split(",")
+            .map(value => Number(value.trim()))
+            .filter(value => Number.isInteger(value) && value > 0);
+
+        const medicationRows = document.querySelectorAll(
+            "#plan-medications .treatment-medication-row"
+        );
+
+        const medications = Array.from(medicationRows).map(row => ({
+            medicationId: Number(row.querySelector(".plan-medication-id").value),
+            dosage: row.querySelector(".plan-dosage").value,
+            frequency: row.querySelector(".plan-frequency").value
+        }));
+
+        submitForm(event.target, "/api/treatments", {
+            petId: Number(document.getElementById("plan-pet-id").value),
+            diseaseIds: diseaseIds,
+            medications: medications,
+            startDate: document.getElementById("plan-start-date").value,
+            endDate: document.getElementById("plan-end-date").value || null
+        }, "treatment-plan-message");
+    });
+
     document.getElementById("create-treatment-form")?.addEventListener("submit", event => {
         event.preventDefault();
         submitForm(event.target, "/api/treatments", {
@@ -219,6 +338,30 @@ function attachFormHandlers() {
             startDate: document.getElementById("start-date").value,
             endDate: document.getElementById("end-date").value || null
         }, "treatment-message");
+    });
+
+    document.getElementById("owner-search-form")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const message = document.getElementById("owner-search-message");
+
+        try {
+            await searchOwners();
+            message.textContent = "Arama tamamlandi.";
+        } catch (error) {
+            message.textContent = error.message;
+        }
+    });
+
+    document.getElementById("pet-search-form")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const message = document.getElementById("pet-search-message");
+
+        try {
+            await searchPets();
+            message.textContent = "Arama tamamlandi.";
+        } catch (error) {
+            message.textContent = error.message;
+        }
     });
 
     document.getElementById("open-owner-form")?.addEventListener("click", () => {

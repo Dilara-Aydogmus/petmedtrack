@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PatchMapping;
 import java.util.List;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/owners")
@@ -27,6 +28,11 @@ public class OwnerController {
     @GetMapping
     public List<Owner> getAllOwners(){
         return ownerService.findAll();
+    }
+
+    @GetMapping("/search")
+    public List<Owner> searchOwners(@RequestParam(required = false) String name, @RequestParam(required = false) Boolean active){
+        return ownerService.search(name, active);
     }
 
     @GetMapping("/{id}")

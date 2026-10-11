@@ -65,6 +65,44 @@
             <article class="stat-card plum-card"><div class="stat-icon">♧</div><div><span>Evcil hayvan sahibi</span><strong id="owner-count">0</strong><small><em>+2</em> bu hafta</small></div></article>
         </section>
 
+        <section class="search-grid" id="search">
+            <article class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">VETERINER ARAMASI</p>
+                        <h2>Sahip ara</h2>
+                    </div>
+                </div>
+                <form id="owner-search-form" class="search-form">
+                    <input id="owner-search-name" placeholder="Ad veya soyad">
+                    <select id="owner-search-active">
+                        <option value="">Tum sahipler</option>
+                        <option value="true">Aktif sahipler</option>
+                        <option value="false">Pasif sahipler</option>
+                    </select>
+                    <button type="submit" class="primary-button">Ara</button>
+                </form>
+                <p id="owner-search-message"></p>
+                <div id="owner-search-results" class="search-results"></div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">HASTA ARAMASI</p>
+                        <h2>Hayvan ara</h2>
+                    </div>
+                </div>
+                <form id="pet-search-form" class="search-form">
+                    <input id="pet-search-name" placeholder="Hayvan adi">
+                    <input id="pet-search-species" placeholder="Tur">
+                    <button type="submit" class="primary-button">Ara</button>
+                </form>
+                <p id="pet-search-message"></p>
+                <div id="pet-search-results" class="search-results"></div>
+            </article>
+        </section>
+
         <section class="content-grid">
             <article class="panel treatments-panel" id="treatments">
                 <div class="panel-heading"><div><p class="eyebrow">TAKİP LİSTESİ</p><h2>Son tedaviler</h2></div><a href="#all-treatments">Tümünü gör <span>→</span></a></div>
@@ -161,6 +199,36 @@
             </form>
 
             <p id="treatment-message"></p>
+        </section>
+
+        <section class="panel" id="disease-form">
+            <h2>Yeni hastalik ekle</h2>
+            <form id="create-disease-form">
+                <input id="disease-name" placeholder="Hastalik adi" required>
+                <button type="submit" class="primary-button">Hastaligi kaydet</button>
+            </form>
+            <p id="disease-message"></p>
+        </section>
+
+        <section class="panel" id="treatment-plan-form">
+            <span id="new-treatment-plan"></span>
+            <h2>Yeni tedavi plani ekle</h2>
+            <form id="create-treatment-plan-form">
+                <input id="plan-pet-id" type="number" placeholder="Hayvan ID" required>
+                <input id="plan-disease-ids" placeholder="Hastalik ID'leri: 1,2" required>
+                <div id="plan-medications">
+                    <div class="treatment-medication-row">
+                        <input class="plan-medication-id" type="number" placeholder="Ilac ID" required>
+                        <input class="plan-dosage" placeholder="Doz" required>
+                        <input class="plan-frequency" placeholder="Siklik" required>
+                    </div>
+                </div>
+                <button id="add-plan-medication" type="button" class="secondary-button">+ Ilac ekle</button>
+                <input id="plan-start-date" type="date" required>
+                <input id="plan-end-date" type="date">
+                <button type="submit" class="primary-button">Tedavi planini kaydet</button>
+            </form>
+            <p id="treatment-plan-message"></p>
         </section>
 
     </main>

@@ -1,23 +1,28 @@
 package org.example.treatment;
 
 import org.example.common.ResourceNotFoundException;
+import org.example.disease.Disease;
+import org.example.disease.DiseaseRepository;
 import org.example.medication.Medication;
 import org.example.medication.MedicationService;
+import org.example.notification.EmailMessage;
+import org.example.notification.EmailProducer;
 import org.example.pet.Pet;
 import org.example.pet.PetService;
 import org.example.treatment.dto.CreateTreatmentRequest;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.stereotype.Service;
-import java.util.List;
-
+import org.example.treatment.dto.TreatmentMedicationRequest;
 import org.example.treatment.dto.UpdateTreatmentRequest;
-
-import java.time.LocalDate;
-import org.example.notification.EmailMessage;
-import org.example.notification.EmailProducer;
-
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 
 @Service
 public class TreatmentService {
@@ -25,12 +30,14 @@ public class TreatmentService {
     private final PetService petService;
     private final MedicationService medicationService;
     private final EmailProducer emailProducer;
+    private final DiseaseRepository diseaseRepository;
 
-    public TreatmentService(TreatmentRepository treatmentRepository, PetService petService, MedicationService medicationService, EmailProducer emailProducer) {
+    public TreatmentService(TreatmentRepository treatmentRepository, PetService petService, MedicationService medicationService, EmailProducer emailProducer, DiseaseRepository diseaseRepository) {
         this.treatmentRepository = treatmentRepository;
         this.petService = petService;
         this.medicationService = medicationService;
         this.emailProducer = emailProducer;
+        this.diseaseRepository = diseaseRepository;
     }
 
     @Cacheable(value = "treatments")
@@ -52,23 +59,14 @@ public class TreatmentService {
             @CacheEvict(value = "treatmentsByPet", allEntries = true)
     })
     public Treatment create(CreateTreatmentRequest request) {
-        if (request.getEndDate() != null && request.getEndDate().isBefore(request.getStartDate())) {
-            throw new IllegalArgumentException("End date cannot be before start date");
-        }
+        validateDates(request.getStartDate(), request.getEndDate());
         Pet pet = petService.findById(request.getPetId());
-        Medication medication = medicationService.findById(request.getMedicationId());
+        Set<Disease> diseases = findDiseases(request.getDiseaseIds());
 
-        Treatment treatment = new Treatment(pet, medication, request.getDosage(), request.getFrequency(), request.getStartDate(), request.getEndDate());
+        Treatment treatment = new Treatment(pet, diseases, request.getStartDate(), request.getEndDate());
+        addMedications(treatment, request.getMedications());
         Treatment savedTreatment = treatmentRepository.save(treatment);
-        EmailMessage emailMessage = new EmailMessage(savedTreatment.getPet().getOwner().getEmail(),
-                "PetMedTrack tedavi bildirimi", "Merhaba"
-                + savedTreatment.getPet().getOwner().getFirstName() + ",\n\n"
-                + savedTreatment.getPet().getName()
-                + " adlı evcil hayvanınız için yeni bir tedavi kaydı oluşturuldu. \n\n"
-                + "Detayları görmek için PetMedTrack hesabınıza giriş yapın:\n"
-                + "PetMedTrack Ekibi");
-
-        emailProducer.sendEmail(emailMessage);
+        sendCreatedEmail(savedTreatment);
         return savedTreatment;
     }
 
@@ -93,17 +91,14 @@ public class TreatmentService {
             treatment.setPet(pet);
         }
 
-        if(request.getMedicationId() != null){
-            Medication medication = medicationService.findById(request.getMedicationId());
-            treatment.setMedication(medication);
+        if(request.getDiseaseIds() != null){
+          Set<Disease> diseases = findDiseases(request.getDiseaseIds());
+          treatment.setDiseases(diseases);
         }
 
-        if(request.getDosage() != null){
-            treatment.setDosage(request.getDosage());
-        }
-
-        if(request.getFrequency() != null){
-            treatment.setFrequency(request.getFrequency());
+        if(request.getMedications() != null){
+            treatment.getTreatmentMedications().clear();
+            addMedications(treatment, request.getMedications());
         }
 
         if(request.getStartDate() != null){
@@ -113,20 +108,9 @@ public class TreatmentService {
             treatment.setEndDate(request.getEndDate());
         }
         Treatment savedTreatment = treatmentRepository.save(treatment);
-        EmailMessage emailMessage = new EmailMessage(
-                savedTreatment.getPet().getOwner().getEmail(),
-                "PetMedTrack tedavi güncellemesi",
-                        "Merhaba "
-                        + savedTreatment.getPet().getOwner().getFirstName()
-                        + ",\n\n"
-                        + savedTreatment.getPet().getName()
-                        + " adlı evcil hayvanınızın tedavi bilgileri "
-                        + "veterineriniz tarafından güncellendi.\n\n"
-                        + "Detayları görmek için PetMedTrack hesabınıza giriş yapın.\n"
-                        + "PetMedTrack Ekibi"
-        );
-        emailProducer.sendEmail(emailMessage);
+        sendUpdatedEmail(savedTreatment);
         return savedTreatment;
+
     }
 
     @Caching(evict = {
@@ -175,5 +159,59 @@ public class TreatmentService {
         return treatmentRepository.findByPetId(petId);
     }
 
-}
+    private void validateDates(LocalDate startDate, LocalDate endDate){
+        if(endDate != null && endDate.isBefore(startDate)){
+            throw new IllegalArgumentException("End date cannot be before start date.");
+        }
+    }
 
+    private Set<Disease> findDiseases(Set<Long> diseaseIds){
+        Set<Disease> diseases = new HashSet<>();
+        for(Long diseaseId : diseaseIds){
+            Optional<Disease> diseaseOptional = diseaseRepository.findById(diseaseId);
+            if(diseaseOptional.isEmpty()){
+                throw new ResourceNotFoundException("Disease not found:" + diseaseId);
+            }
+            diseases.add(diseaseOptional.get());
+        }
+        return diseases;
+    }
+
+    private void addMedications(Treatment treatment, List<TreatmentMedicationRequest> requests){
+        for(TreatmentMedicationRequest request : requests){
+            Medication medication = medicationService.findById(request.getMedicationId());
+            treatment.addMedication(medication, request.getDosage(), request.getFrequency());
+        }
+    }
+
+    private void sendCreatedEmail(Treatment treatment){
+        EmailMessage emailMessage = new EmailMessage(treatment.getPet().getOwner().getEmail(),
+                "PetMedTrack tedavi bildirimi",
+                "Merhaba "
+                        + treatment.getPet()
+                        .getOwner()
+                        .getFirstName()
+                        + ",\n\n"
+                        + treatment.getPet().getName()
+                        + " adlı evcil hayvanınız için "
+                        + "yeni bir tedavi oluşturuldu."
+                );
+            emailProducer.sendEmail(emailMessage);
+    }
+
+    private void sendUpdatedEmail(Treatment treatment){
+        EmailMessage emailMessage = new EmailMessage(
+                treatment.getPet().getOwner().getEmail(),
+                "PetMedTrack tedavi güncellemesi",
+                "Merhaba "
+                        + treatment.getPet()
+                        .getOwner()
+                        .getFirstName()
+                        + ",\n\n"
+                        + treatment.getPet().getName()
+                        + " adlı evcil hayvanınızın tedavi bilgileri "
+                        + "güncellendi."
+        );
+        emailProducer.sendEmail(emailMessage);
+    }
+}

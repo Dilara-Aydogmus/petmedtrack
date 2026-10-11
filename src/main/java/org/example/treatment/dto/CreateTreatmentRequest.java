@@ -1,11 +1,16 @@
 package org.example.treatment.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -15,14 +20,12 @@ public class CreateTreatmentRequest {
     @NotNull(message = "Pet id is required")
     private Long petId;
 
-    @NotNull(message = "Medication id is required")
-    private Long medicationId;
+    @NotEmpty(message = "At least one disease is required")
+    private Set<Long> diseaseIds = new HashSet<>();
 
-    @NotBlank(message = "Dosage is required")
-    private String dosage;
-
-    @NotBlank(message = "Frequency is required")
-    private String frequency;
+    @Valid
+    @NotEmpty(message = "At least one medication is required")
+    private List<TreatmentMedicationRequest> medications;
 
     @NotNull(message = "Start date is required")
     private LocalDate startDate;

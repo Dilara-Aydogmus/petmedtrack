@@ -25,6 +25,7 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter){
                         "/app.js",
                         "/api/auth/**",
                         "/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/owners/search", "/api/pets/search").hasAnyRole("VET", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER","VET","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/**").hasAnyRole("VET","ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("VET","ADMIN")

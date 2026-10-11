@@ -8,6 +8,9 @@ import java.util.List;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.example.pet.specification.PetNameSpecification;
+import org.example.pet.specification.PetSpeciesSpecification;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 public class PetService {
@@ -74,6 +77,11 @@ public class PetService {
     public void deleteById(Long id) {
         findById(id);
         petRepository.deleteById(id);
+    }
+
+    public List<Pet> search(String name, String species){
+        Specification<Pet> specification = new PetNameSpecification(name).and(new PetSpeciesSpecification(species));
+        return petRepository.findAll(specification);
     }
 
     @Cacheable(value = "petsByOwner", key = "#ownerId")
