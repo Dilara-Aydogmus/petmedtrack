@@ -157,7 +157,7 @@ async function loadDashboard() {
                 </div>
             </td>
             <td>${escapeHtml(medicationName)}</td>
-            <td>${escapeHtml(treatment.dosage)} · ${escapeHtml(treatment.frequency)}</td>
+            <td>${escapeHtml(dosage)}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
         `;
         treatmentsBody.appendChild(row);
