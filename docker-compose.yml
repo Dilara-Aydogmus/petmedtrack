@@ -13,12 +13,12 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
 
 
-  app:
+  pet-info-health-service:
     build:
       context: .
       dockerfile: Dockerfile
-    image: petmedtrack:latest
-    container_name: petmedtrack-app
+    image: pet-info-health-service:latest
+    container_name: pet-info-health-service
     restart: unless-stopped
     depends_on:
       - rabbitmq

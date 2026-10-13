@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_REPOSITORY = 'dilaraydgms/petmedtrack'
+        IMAGE_REPOSITORY = 'dilaraydgms/pet-info-health-service'
         NOTIFICATION_IMAGE_REPOSITORY = 'dilaraydgms/petmedtrack-notification'
         GCP_PROJECT = 'petmedtrack-510515'
         GKE_CLUSTER = 'petmedtrack-cluster'
@@ -66,15 +66,15 @@ pipeline {
                     $appImage = "$env:IMAGE_REPOSITORY`:latest"
                     $notificationImage = "$env:NOTIFICATION_IMAGE_REPOSITORY`:latest"
 
-                    kubectl set image deployment/app `
-                        petmedtrack-app=$appImage `
+                    kubectl set image deployment/pet-info-health-service `
+                        pet-info-health-service=$appImage `
                         --namespace $env:K8S_NAMESPACE
 
                     kubectl set image deployment/notification-service `
                         notification-service=$notificationImage `
                         --namespace $env:K8S_NAMESPACE
 
-                    kubectl rollout status deployment/app `
+                    kubectl rollout status deployment/pet-info-health-service `
                         --namespace $env:K8S_NAMESPACE `
                         --timeout=180s
 

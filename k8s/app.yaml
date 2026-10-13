@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: petmedtrack
+  name: pet-info-health-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: petmedtrack
+      app: pet-info-health-service
   template:
     metadata:
       labels:
-        app: petmedtrack
+        app: pet-info-health-service
     spec:
       containers:
-        - name: petmedtrack
-          image: petmedtrack:latest
+        - name: pet-info-health-service
+          image: pet-info-health-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -32,10 +32,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: petmedtrack-service
+  name: pet-info-health-service
 spec:
   selector:
-    app: petmedtrack
+    app: pet-info-health-service
   type: LoadBalancer
   ports:
     - name: http

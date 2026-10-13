@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>com.dilara</groupId>
-    <artifactId>petmedtrack</artifactId>
+    <artifactId>pet-info-health-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>PetMedTrack</name>
+    <name>pet-info-health-service</name>
     <description>Veterinary medication tracking system</description>
 
     <properties>
