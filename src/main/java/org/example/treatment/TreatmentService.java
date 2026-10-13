@@ -15,6 +15,7 @@ import org.example.treatment.dto.UpdateTreatmentRequest;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -58,12 +59,19 @@ public class TreatmentService {
             @CacheEvict(value = "treatments", allEntries = true),
             @CacheEvict(value = "treatmentsByPet", allEntries = true)
     })
+    @Transactional
     public Treatment create(CreateTreatmentRequest request) {
         validateDates(request.getStartDate(), request.getEndDate());
         Pet pet = petService.findById(request.getPetId());
         Set<Disease> diseases = findDiseases(request.getDiseaseIds());
 
-        Treatment treatment = new Treatment(pet, diseases, request.getStartDate(), request.getEndDate());
+        Treatment treatment = new Treatment(
+                pet,
+                diseases,
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getNextCheckupAt()
+        );
         addMedications(treatment, request.getMedications());
         Treatment savedTreatment = treatmentRepository.save(treatment);
         sendCreatedEmail(savedTreatment);
@@ -74,6 +82,7 @@ public class TreatmentService {
             @CacheEvict(value = "treatments", allEntries = true),
             @CacheEvict(value = "treatmentsByPet", allEntries = true)
     })
+    @Transactional
     public Treatment update(Long id, UpdateTreatmentRequest request){
         Treatment treatment= findById(id);
         LocalDate startDate = request.getStartDate() != null
@@ -106,6 +115,9 @@ public class TreatmentService {
         }
         if(request.getEndDate() != null){
             treatment.setEndDate(request.getEndDate());
+        }
+        if(request.getNextCheckupAt() != null){
+            treatment.scheduleCheckup(request.getNextCheckupAt());
         }
         Treatment savedTreatment = treatmentRepository.save(treatment);
         sendUpdatedEmail(savedTreatment);

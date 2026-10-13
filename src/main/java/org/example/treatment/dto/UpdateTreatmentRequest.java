@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -20,4 +21,6 @@ public class UpdateTreatmentRequest {
     private List<TreatmentMedicationRequest> medications;
     private LocalDate startDate;
     private LocalDate endDate;
+
+    private LocalDateTime nextCheckupAt;
 }

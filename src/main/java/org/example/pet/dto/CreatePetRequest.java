@@ -1,9 +1,12 @@
-package org.example.pet.dto;import jakarta.validation.constraints.NotBlank;
+package org.example.pet.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
-import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -18,7 +21,15 @@ public class CreatePetRequest {
 
     private String breed;
 
-    private LocalDate birthDate;
+    private Integer ageYears;
+
+    private Integer ageMonths;
+
+    private BigDecimal weight;
+
+    private BigDecimal height;
+
+    private boolean neutered;
 
     @NotNull(message = "Owner id is required")
     private Long ownerId;

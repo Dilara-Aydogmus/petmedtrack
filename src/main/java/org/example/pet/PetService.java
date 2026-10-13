@@ -45,7 +45,17 @@ public class PetService {
     })
     public Pet create(CreatePetRequest request){
         Owner owner = ownerService.findById(request.getOwnerId());
-        Pet pet = new Pet(request.getName(), request.getSpecies(), request.getBreed(), request.getBirthDate(), owner);
+        Pet pet = new Pet(
+                request.getName(),
+                request.getSpecies(),
+                request.getBreed(),
+                request.getAgeYears(),
+                request.getAgeMonths(),
+                request.getWeight(),
+                request.getHeight(),
+                request.isNeutered(),
+                owner
+        );
         Pet savedPet = save(pet);
         return savedPet;
     }
@@ -64,7 +74,11 @@ public class PetService {
         pet.setName(request.getName());
         pet.setSpecies(request.getSpecies());
         pet.setBreed(request.getBreed());
-        pet.setBirthDate(request.getBirthDate());
+        pet.setAgeYears(request.getAgeYears());
+        pet.setAgeMonths(request.getAgeMonths());
+        pet.setWeight(request.getWeight());
+        pet.setHeight(request.getHeight());
+        pet.setNeutered(request.isNeutered());
 
         Pet updatedPet = save(pet);
         return updatedPet;

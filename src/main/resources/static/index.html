@@ -151,7 +151,14 @@
                 <input id="pet-name" placeholder="Hayvan adı" required>
                 <input id="species" placeholder="Tür" required>
                 <input id="breed" placeholder="Irk">
-                <input id="birth-date" type="date">
+                <input id="age-years" type="number" min="0" placeholder="Yaş (yıl)">
+                <input id="age-months" type="number" min="0" max="11" placeholder="Yaş (ay)">
+                <input id="weight" type="number" min="0" step="0.01" placeholder="Kilo (kg)">
+                <input id="height" type="number" min="0" step="0.01" placeholder="Boy (cm)">
+                <label class="checkbox-field">
+                    <input id="neutered" type="checkbox">
+                    Kısırlaştırıldı
+                </label>
                 <input id="owner-id" type="number" placeholder="Sahip ID" required>
 
                 <button type="submit" class="primary-button">
@@ -226,6 +233,8 @@
                 <button id="add-plan-medication" type="button" class="secondary-button">+ Ilac ekle</button>
                 <input id="plan-start-date" type="date" required>
                 <input id="plan-end-date" type="date">
+                <label for="plan-next-checkup">Sonraki kontrol zamanı</label>
+                <input id="plan-next-checkup" type="datetime-local">
                 <button type="submit" class="primary-button">Tedavi planini kaydet</button>
             </form>
             <p id="treatment-plan-message"></p>

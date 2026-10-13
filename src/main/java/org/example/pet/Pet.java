@@ -12,8 +12,8 @@ import jakarta.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.example.owner.Owner;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "pets")
@@ -31,7 +31,13 @@ public class Pet {
 
     private String breed;
 
-    private LocalDate birthDate;
+    private Integer ageYears;
+    private Integer ageMonths;
+    private BigDecimal weight;
+    private BigDecimal height;
+
+    @Column(nullable = false)
+    private boolean neutered = false;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -44,13 +50,17 @@ public class Pet {
 
     }
 
-    public Pet(String name, String species, String breed, LocalDate birthDate, Owner owner){
-          this.name = name;
-          this.species = species;
-          this.breed = breed;
-          this.birthDate = birthDate;
-          this.owner = owner;
-          this.createdAt = LocalDateTime.now();
+    public Pet(String name, String species, String breed, Integer ageYears, Integer ageMonths, BigDecimal weight, BigDecimal height, boolean neutered, Owner owner){
+        this.name = name;
+        this.species = species;
+        this.breed = breed;
+        this.ageYears = ageYears;
+        this.ageMonths = ageMonths;
+        this.weight = weight;
+        this.height = height;
+        this.neutered = neutered;
+        this.owner = owner;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -65,9 +75,30 @@ public class Pet {
     public String getBreed() {
         return breed;
     }
-    public LocalDate getBirthDate() {
-        return birthDate;
+    public Integer getAgeYears() {
+        return ageYears;
     }
+    public Integer getAgeMonths() {
+        return ageMonths;
+    }
+    public String getAgeText(){
+        return ageYears + " yıl " + ageMonths + " ay ";
+    }
+
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public BigDecimal getHeight() {
+        return height;
+    }
+
+    public boolean isNeutered() {
+        return neutered;
+    }
+
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -82,10 +113,25 @@ public class Pet {
         this.breed = breed;
     }
 
-    public void setBirthDate(LocalDate birthDate) {
-        this.birthDate = birthDate;
+    public void setAgeYears(Integer ageYears) {
+        this.ageYears = ageYears;
     }
 
+    public void setAgeMonths(Integer ageMonths) {
+        this.ageMonths = ageMonths;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
+    }
+
+    public void setHeight(BigDecimal height) {
+        this.height = height;
+    }
+
+    public void setNeutered(boolean neutered) {
+        this.neutered = neutered;
+    }
     public void setOwner(Owner owner){
         this.owner = owner;
     }

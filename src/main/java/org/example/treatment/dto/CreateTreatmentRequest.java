@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,4 +32,6 @@ public class CreateTreatmentRequest {
     private LocalDate startDate;
 
     private LocalDate endDate;
+
+    private LocalDateTime nextCheckupAt;
 }

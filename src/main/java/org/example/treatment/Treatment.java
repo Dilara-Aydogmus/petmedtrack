@@ -63,6 +63,9 @@ public class Treatment {
     private LocalDate startDate;
 
     private LocalDate endDate;
+    private LocalDateTime nextCheckupAt;
+
+    private boolean checkupReminderSent = false;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
@@ -71,11 +74,18 @@ public class Treatment {
     @JsonIgnore
     private TreatmentState state = new ActiveTreatmentState();
 
-    public Treatment(Pet pet, Set<Disease> diseases, LocalDate startDate, LocalDate endDate){
+    public Treatment(
+            Pet pet,
+            Set<Disease> diseases,
+            LocalDate startDate,
+            LocalDate endDate,
+            LocalDateTime nextCheckupAt
+    ) {
         this.pet = pet;
         this.diseases = diseases;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.nextCheckupAt = nextCheckupAt;
         this.createdAt = LocalDateTime.now();
         this.status = TreatmentStatus.ACTIVE;
         this.state = new ActiveTreatmentState();
@@ -104,5 +114,10 @@ public class Treatment {
     public void reactivate(){
         state.reactivate(this);
         state = TreatmentStateFactory.create(status);
+    }
+
+    public void scheduleCheckup(LocalDateTime nextCheckupAt){
+        this.nextCheckupAt = nextCheckupAt;
+        this.checkupReminderSent = false;
     }
 }

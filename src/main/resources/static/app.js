@@ -269,7 +269,19 @@ function attachFormHandlers() {
             name: document.getElementById("pet-name").value,
             species: document.getElementById("species").value,
             breed: document.getElementById("breed").value,
-            birthDate: document.getElementById("birth-date").value || null,
+            ageYears: document.getElementById("age-years").value
+                ? Number(document.getElementById("age-years").value)
+                : null,
+            ageMonths: document.getElementById("age-months").value
+                ? Number(document.getElementById("age-months").value)
+                : null,
+            weight: document.getElementById("weight").value
+                ? Number(document.getElementById("weight").value)
+                : null,
+            height: document.getElementById("height").value
+                ? Number(document.getElementById("height").value)
+                : null,
+            neutered: document.getElementById("neutered").checked,
             ownerId: Number(document.getElementById("owner-id").value)
         }, "pet-message");
     });
@@ -324,7 +336,10 @@ function attachFormHandlers() {
             diseaseIds: diseaseIds,
             medications: medications,
             startDate: document.getElementById("plan-start-date").value,
-            endDate: document.getElementById("plan-end-date").value || null
+            endDate: document.getElementById("plan-end-date").value || null,
+            nextCheckupAt: document.getElementById("plan-next-checkup").value
+                ? document.getElementById("plan-next-checkup").value + ":00"
+                : null
         }, "treatment-plan-message");
     });
 
