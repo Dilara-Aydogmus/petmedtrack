@@ -322,3 +322,29 @@ a { color:inherit; text-decoration:none; }
     color: var(--muted);
     text-align: center;
 }
+
+.management-panel {
+    margin-top: 22px;
+}
+
+.management-panel h3 {
+    margin: 26px 0 8px;
+    color: var(--plum);
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+}
+
+.table-action {
+    margin: 2px;
+    padding: 6px 8px;
+    color: var(--plum);
+    background: #E9DCE2;
+    border: 0;
+    border-radius: 6px;
+    font-size: 10px;
+}
+
+.table-action:hover {
+    color: var(--paper);
+    background: var(--dusty-pink);
+}

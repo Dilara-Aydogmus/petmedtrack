@@ -32,4 +32,16 @@ public class DiseaseController {
     public Disease createDisease(@Valid @RequestBody CreateDiseaseRequest request){
         return diseaseService.create(request);
     }
+
+    @PutMapping("/{id}")
+    public Disease updateDisease(@PathVariable Long id, @Valid @RequestBody CreateDiseaseRequest request){
+        return diseaseService.update(id,request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDisease(@PathVariable Long id){
+        diseaseService.deleteById(id);
+    }
+
 }

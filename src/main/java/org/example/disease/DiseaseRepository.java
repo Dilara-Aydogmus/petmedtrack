@@ -9,4 +9,5 @@ public interface DiseaseRepository extends JpaRepository<Disease, Long> {
     Disease findDisease(@Param("id") Long id);
     Disease findByName(String name);
     boolean existsByName(String name);
+    boolean existsByNameAndIdNot(String name, Long id);
 }

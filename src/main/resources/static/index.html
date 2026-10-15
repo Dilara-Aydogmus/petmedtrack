@@ -102,10 +102,37 @@
             </article>
         </section>
 
+        <section class="panel management-panel" id="management-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">KAYIT YÖNETİMİ</p>
+                    <h2>Kayıtlar</h2>
+                </div>
+            </div>
+
+            <h3>Sahipler</h3>
+            <div class="table-wrap"><table><thead><tr><th>Ad</th><th>E-posta</th><th>Telefon</th><th>Klinik</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="owners-body"></tbody></table></div>
+
+            <h3>Hayvanlar</h3>
+            <div class="table-wrap"><table><thead><tr><th>Ad</th><th>Tür / Irk</th><th>Yaş</th><th>Sahip</th><th>İşlem</th></tr></thead><tbody id="pets-body"></tbody></table></div>
+
+            <h3>İlaçlar</h3>
+            <div class="table-wrap"><table><thead><tr><th>Ad</th><th>Oluşturulma</th><th>İşlem</th></tr></thead><tbody id="medications-body"></tbody></table></div>
+
+            <h3>Hastalıklar</h3>
+            <div class="table-wrap"><table><thead><tr><th>Ad</th><th>İşlem</th></tr></thead><tbody id="diseases-body"></tbody></table></div>
+
+            <h3>Klinikler</h3>
+            <div class="table-wrap"><table><thead><tr><th>Ad</th><th>Adres</th><th>Telefon</th><th>İşlem</th></tr></thead><tbody id="clinics-body"></tbody></table></div>
+
+            <h3>Veterinerler</h3>
+            <div class="table-wrap"><table><thead><tr><th>Ad</th><th>E-posta</th><th>Klinik</th><th>İşlem</th></tr></thead><tbody id="veterinarians-body"></tbody></table></div>
+        </section>
+
         <section class="content-grid">
             <article class="panel treatments-panel" id="treatments">
                 <div class="panel-heading"><div><p class="eyebrow">TAKİP LİSTESİ</p><h2>Son tedaviler</h2></div><a href="#all-treatments">Tümünü gör <span>→</span></a></div>
-                <div class="table-wrap"><table><thead><tr><th>Hasta</th><th>İlaç</th><th>Doz / Sıklık</th><th>Durum</th></tr></thead><tbody id ="treatments-body">
+                <div class="table-wrap"><table><thead><tr><th>Hasta</th><th>İlaç</th><th>Doz / Sıklık</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id ="treatments-body">
                     <tr><td><div class="patient"><span class="patient-avatar peach">M</span><div><strong>Maya</strong><small>Kedi · Tekir</small></div></div></td><td>Amoksisilin</td><td>2 ml · Günde 2</td><td><span class="status active-status">Aktif</span></td></tr>
                     <tr><td><div class="patient"><span class="patient-avatar lavender">B</span><div><strong>Boncuk</strong><small>Köpek · Pomeranian</small></div></div></td><td>Vitamin B12</td><td>1 tablet · Günde 1</td><td><span class="status soon-status">Yaklaşıyor</span></td></tr>
                     <tr><td><div class="patient"><span class="patient-avatar sage">L</span><div><strong>Loki</strong><small>Kedi · British Shorthair</small></div></div></td><td>Metronidazol</td><td>5 ml · Günde 1</td><td><span class="status completed-status">Tamamlandı</span></td></tr>

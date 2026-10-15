@@ -1,5 +1,8 @@
 let auth = sessionStorage.getItem("petmedtrack-auth");
 let formHandlersAttached = false;
+let dashboardData = {
+    owners: [], pets: [], medications: [], diseases: [], treatments: [], clinics: [], veterinarians: []
+};
 
 const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -133,14 +136,225 @@ async function loadReferenceData() {
     fillClinicSelect("veterinarian-clinic-id", clinics);
 }
 
+function actionButton(action, id, label) {
+    return `<button type="button" class="table-action" data-action="${action}" data-id="${id}">${label}</button>`;
+}
+
+function renderManagementTables(owners, pets, medications, clinics, veterinarians) {
+    const ownersBody = document.getElementById("owners-body");
+    if (ownersBody) {
+        ownersBody.innerHTML = owners.map(owner => `
+            <tr>
+                <td>${escapeHtml(owner.firstName)} ${escapeHtml(owner.lastName)}</td>
+                <td>${escapeHtml(owner.email)}</td>
+                <td>${escapeHtml(owner.phoneNumber)}</td>
+                <td>${escapeHtml(owner.clinic?.name || "-")}</td>
+                <td>${owner.active ? "Aktif" : "Pasif"}</td>
+                <td>${actionButton("edit-owner", owner.id, "Düzenle")}
+                    ${owner.active ? actionButton("deactivate-owner", owner.id, "Pasifleştir") : actionButton("activate-owner", owner.id, "Aktifleştir")}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="6" class="empty-state">Kayıt yok.</td></tr>`;
+    }
+
+    const petsBody = document.getElementById("pets-body");
+    if (petsBody) {
+        petsBody.innerHTML = pets.map(pet => `
+            <tr>
+                <td>${escapeHtml(pet.name)}</td>
+                <td>${escapeHtml(pet.species)} / ${escapeHtml(pet.breed || "-")}</td>
+                <td>${pet.ageYears ?? 0} yıl ${pet.ageMonths ?? 0} ay</td>
+                <td>${escapeHtml(pet.owner?.firstName || "-")} ${escapeHtml(pet.owner?.lastName || "")}</td>
+                <td>${actionButton("edit-pet", pet.id, "Düzenle")} ${actionButton("delete-pet", pet.id, "Sil")}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="5" class="empty-state">Kayıt yok.</td></tr>`;
+    }
+
+    const medicationsBody = document.getElementById("medications-body");
+    if (medicationsBody) {
+        medicationsBody.innerHTML = medications.map(medication => `
+            <tr>
+                <td>${escapeHtml(medication.name)}</td>
+                <td>${escapeHtml(medication.createdAt || "-")}</td>
+                <td>${actionButton("edit-medication", medication.id, "Düzenle")} ${actionButton("delete-medication", medication.id, "Sil")}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="3" class="empty-state">Kayıt yok.</td></tr>`;
+    }
+
+    const diseasesBody = document.getElementById("diseases-body");
+    if (diseasesBody) {
+        diseasesBody.innerHTML = (dashboardData.diseases || []).map(disease => `
+            <tr>
+                <td>${escapeHtml(disease.name)}</td>
+                <td>${actionButton("edit-disease", disease.id, "Düzenle")} ${actionButton("delete-disease", disease.id, "Sil")}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="2" class="empty-state">Kayıt yok.</td></tr>`;
+    }
+
+    const clinicsBody = document.getElementById("clinics-body");
+    if (clinicsBody) {
+        clinicsBody.innerHTML = clinics.map(clinic => `
+            <tr>
+                <td>${escapeHtml(clinic.name)}</td>
+                <td>${escapeHtml(clinic.address || "-")}</td>
+                <td>${escapeHtml(clinic.phoneNumber)}</td>
+                <td>${actionButton("edit-clinic", clinic.id, "Düzenle")} ${actionButton("delete-clinic", clinic.id, "Sil")}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="4" class="empty-state">Kayıt yok.</td></tr>`;
+    }
+
+    const veterinariansBody = document.getElementById("veterinarians-body");
+    if (veterinariansBody) {
+        veterinariansBody.innerHTML = veterinarians.map(veterinarian => `
+            <tr>
+                <td>${escapeHtml(veterinarian.firstName)} ${escapeHtml(veterinarian.lastName)}</td>
+                <td>${escapeHtml(veterinarian.email)}</td>
+                <td>${escapeHtml(veterinarian.clinic?.name || "-")}</td>
+                <td>${actionButton("edit-veterinarian", veterinarian.id, "Düzenle")} ${actionButton("delete-veterinarian", veterinarian.id, "Sil")}</td>
+            </tr>
+        `).join("") || `<tr><td colspan="4" class="empty-state">Kayıt yok.</td></tr>`;
+    }
+}
+
+async function updateOwner(owner) {
+    const firstName = prompt("Ad", owner.firstName);
+    const lastName = prompt("Soyad", owner.lastName);
+    const email = prompt("E-posta", owner.email);
+    const phoneNumber = prompt("Telefon", owner.phoneNumber);
+    if (!firstName || !lastName || !email || !phoneNumber) return;
+
+    await request(`/api/owners/${owner.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            firstName, lastName, email, phoneNumber,
+            clinicId: owner.clinic.id
+        })
+    });
+}
+
+async function updatePet(pet) {
+    const name = prompt("Hayvan adı", pet.name);
+    const species = prompt("Tür", pet.species);
+    const breed = prompt("Irk", pet.breed || "");
+    if (!name || !species) return;
+
+    await request(`/api/pets/${pet.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            name, species, breed,
+            ageYears: pet.ageYears,
+            ageMonths: pet.ageMonths,
+            weight: pet.weight,
+            height: pet.height,
+            neutered: pet.neutered,
+            ownerId: pet.owner.id
+        })
+    });
+}
+
+async function updateMedication(medication) {
+    const name = prompt("İlaç adı", medication.name);
+    if (!name) return;
+
+    await request(`/api/medications/${medication.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+    });
+}
+
+async function updateDisease(disease) {
+    const name = prompt("Hastalık adı", disease.name);
+    if (!name) return;
+
+    await request(`/api/diseases/${disease.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+    });
+}
+
+async function updateClinic(clinic) {
+    const name = prompt("Klinik adı", clinic.name);
+    const address = prompt("Adres", clinic.address || "");
+    const phoneNumber = prompt("Telefon", clinic.phoneNumber);
+    if (!name || !phoneNumber) return;
+
+    await request(`/api/clinics/${clinic.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, address, phoneNumber })
+    });
+}
+
+async function updateVeterinarian(veterinarian) {
+    const firstName = prompt("Ad", veterinarian.firstName);
+    const lastName = prompt("Soyad", veterinarian.lastName);
+    const email = prompt("E-posta", veterinarian.email);
+    const phoneNumber = prompt("Telefon", veterinarian.phoneNumber);
+    if (!firstName || !lastName || !email || !phoneNumber) return;
+
+    await request(`/api/veterinarians/${veterinarian.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            firstName, lastName, email, phoneNumber,
+            clinicId: veterinarian.clinic.id
+        })
+    });
+}
+
+async function handleManagementAction(action, id, data) {
+    const item = data.find(value => value.id === Number(id));
+    if (!item) return;
+
+    if (action === "edit-owner") await updateOwner(item);
+    if (action === "edit-pet") await updatePet(item);
+    if (action === "edit-medication") await updateMedication(item);
+    if (action === "edit-disease") await updateDisease(item);
+    if (action === "edit-clinic") await updateClinic(item);
+    if (action === "edit-veterinarian") await updateVeterinarian(item);
+
+    if (action === "deactivate-owner" || action === "activate-owner") {
+        const endpoint = action === "deactivate-owner" ? "" : "/activate";
+        await request(`/api/owners/${id}${endpoint}`, { method: action === "deactivate-owner" ? "DELETE" : "PATCH" });
+    }
+
+    if (["delete-pet", "delete-medication", "delete-disease", "delete-clinic", "delete-veterinarian"].includes(action)) {
+        const endpoint = {
+            "delete-pet": "pets", "delete-medication": "medications",
+            "delete-disease": "diseases",
+            "delete-clinic": "clinics", "delete-veterinarian": "veterinarians"
+        }[action];
+        if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+            await request(`/api/${endpoint}/${id}`, { method: "DELETE" });
+        }
+    }
+
+    if (["complete-treatment", "cancel-treatment", "reactivate-treatment", "delete-treatment"].includes(action)) {
+        const actionName = action.replace("-treatment", "");
+        const method = actionName === "delete" ? "DELETE" : "PATCH";
+        const suffix = method === "PATCH" ? `/${actionName}` : "";
+        await request(`/api/treatments/${id}${suffix}`, { method });
+    }
+}
+
 async function loadDashboard() {
-    const [owners, pets, medications, treatments] = await Promise.all([
+    const [owners, pets, medications, treatments, clinics, veterinarians, diseases] = await Promise.all([
         request("/api/owners"),
         request("/api/pets"),
         request("/api/medications"),
         request("/api/treatments"),
-        loadReferenceData()
+        request("/api/clinics"),
+        request("/api/veterinarians"),
+        request("/api/diseases")
     ]);
+
+    fillClinicSelect("owner-clinic-id", clinics);
+    fillClinicSelect("veterinarian-clinic-id", clinics);
+    dashboardData = { owners, pets, medications, diseases, treatments, clinics, veterinarians };
+    renderManagementTables(owners, pets, medications, clinics, veterinarians);
 
     document.getElementById("owner-count").textContent = owners.length;
     document.getElementById("pet-count").textContent = pets.length;
@@ -187,6 +401,11 @@ async function loadDashboard() {
             <td>${escapeHtml(medicationName)}</td>
             <td>${escapeHtml(dosage)}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
+            <td>
+                ${isActive ? actionButton("complete-treatment", treatment.id, "Bitir") : actionButton("reactivate-treatment", treatment.id, "Aktifleştir")}
+                ${actionButton("cancel-treatment", treatment.id, "İptal")}
+                ${actionButton("delete-treatment", treatment.id, "Sil")}
+            </td>
         `;
         treatmentsBody.appendChild(row);
     });
@@ -425,6 +644,41 @@ function attachFormHandlers() {
             message.textContent = "Arama tamamlandi.";
         } catch (error) {
             message.textContent = error.message;
+        }
+    });
+
+    document.getElementById("management-panel")?.addEventListener("click", async event => {
+        const button = event.target.closest("[data-action]");
+        if (!button) {
+            return;
+        }
+
+        const action = button.dataset.action;
+        const dataByAction = {
+            "edit-owner": dashboardData.owners,
+            "deactivate-owner": dashboardData.owners,
+            "activate-owner": dashboardData.owners,
+            "edit-pet": dashboardData.pets,
+            "delete-pet": dashboardData.pets,
+            "edit-medication": dashboardData.medications,
+            "delete-medication": dashboardData.medications,
+            "edit-disease": dashboardData.diseases,
+            "delete-disease": dashboardData.diseases,
+            "edit-clinic": dashboardData.clinics,
+            "delete-clinic": dashboardData.clinics,
+            "edit-veterinarian": dashboardData.veterinarians,
+            "delete-veterinarian": dashboardData.veterinarians,
+            "complete-treatment": dashboardData.treatments,
+            "cancel-treatment": dashboardData.treatments,
+            "reactivate-treatment": dashboardData.treatments,
+            "delete-treatment": dashboardData.treatments
+        };
+
+        try {
+            await handleManagementAction(action, button.dataset.id, dataByAction[action] || []);
+            await loadDashboard();
+        } catch (error) {
+            alert(error.message);
         }
     });
 

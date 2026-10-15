@@ -33,4 +33,18 @@ public class DiseaseService
         Disease disease = new Disease(request.getName());
         return diseaseRepository.save(disease);
     }
+
+    public Disease update(Long id, CreateDiseaseRequest request){
+        Disease disease = findById(id);
+        if(diseaseRepository.existsByNameAndIdNot(request.getName(),id)){
+            throw new IllegalArgumentException("Disease name already exists");
+        }
+        disease.setName(request.getName());
+        return diseaseRepository.save(disease);
+    }
+
+    public void deleteById(Long id){
+        Disease disease = findById(id);
+        diseaseRepository.delete(disease);
+    }
 }
