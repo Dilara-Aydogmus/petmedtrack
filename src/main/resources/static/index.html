@@ -295,6 +295,27 @@
             <p id="treatment-plan-message"></p>
         </section>
 
+        <section class="panel" id="treatment-edit-form">
+            <span id="edit-treatment-anchor"></span>
+            <h2>Tedaviyi düzenle</h2>
+            <form id="update-treatment-form">
+                <input id="edit-treatment-id" type="hidden">
+                <input id="edit-treatment-pet-id" type="number" placeholder="Hayvan ID" required>
+                <input id="edit-treatment-disease-ids" placeholder="Hastalık ID'leri: 1,2">
+                <div id="edit-treatment-medications"></div>
+                <button id="add-edit-treatment-medication" type="button" class="secondary-button">+ İlaç ekle</button>
+                <input id="edit-treatment-start-date" type="date" required>
+                <input id="edit-treatment-end-date" type="date">
+                <label for="edit-treatment-next-checkup">Sonraki kontrol zamanı</label>
+                <input id="edit-treatment-next-checkup" type="datetime-local">
+                <div class="form-actions">
+                    <button type="submit" class="primary-button">Tedaviyi güncelle</button>
+                    <button id="cancel-treatment-edit" type="button" class="secondary-button">Vazgeç</button>
+                </div>
+            </form>
+            <p id="treatment-edit-message"></p>
+        </section>
+
     </main>
 </div>
 <script src="/app.js"></script>

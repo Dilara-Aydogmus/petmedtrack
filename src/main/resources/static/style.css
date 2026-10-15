@@ -45,6 +45,13 @@ a { color:inherit; text-decoration:none; }
 @media (max-width:700px) { .search-grid { grid-template-columns:1fr; }.search-form { display:grid; grid-template-columns:1fr; }.search-form .primary-button { width:100%; } .search-result { display:block; }.search-result small { display:block; margin-top:4px; text-align:left; } }
 
 #treatment-form { display: none; }
+#treatment-edit-form { display: none; margin-top: 20px; }
+#treatment-edit-form.visible-form { display: block; }
+#update-treatment-form { display: grid; gap: 12px; margin-top: 18px; }
+#update-treatment-form input { padding: 11px 12px; color: var(--black); background: #FFFDFC; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+#update-treatment-form input:focus { outline: 2px solid rgba(183,129,151,.25); border-color: var(--dusty-pink); }
+.form-actions { display: flex; gap: 10px; }
+.form-actions .secondary-button { width: auto; margin-top: 0; padding: 14px 18px; }
 #disease-form, #treatment-plan-form { margin-top: 20px; }
 #create-disease-form, #create-treatment-plan-form { display: grid; gap: 12px; margin-top: 18px; }
 #create-disease-form input, #create-treatment-plan-form input { padding: 11px 12px; color: var(--black); background: #FFFDFC; border: 1px solid var(--line); border-radius: 8px; font: inherit; }

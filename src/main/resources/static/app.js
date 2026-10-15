@@ -140,6 +140,49 @@ function actionButton(action, id, label) {
     return `<button type="button" class="table-action" data-action="${action}" data-id="${id}">${label}</button>`;
 }
 
+function createTreatmentMedicationRow(medication = {}) {
+    const row = document.createElement("div");
+    row.className = "treatment-medication-row edit-treatment-medication-row";
+    row.innerHTML = `
+        <input class="edit-medication-id" type="number" placeholder="İlaç ID" value="${medication.medication?.id || medication.medicationId || ""}" required>
+        <input class="edit-dosage" placeholder="Doz" value="${escapeHtml(medication.dosage || "")}" required>
+        <input class="edit-frequency" placeholder="Sıklık" value="${escapeHtml(medication.frequency || "")}" required>
+        <button type="button" class="table-action remove-edit-medication">Sil</button>
+    `;
+    return row;
+}
+
+function openTreatmentEdit(treatment) {
+    document.getElementById("edit-treatment-id").value = treatment.id;
+    document.getElementById("edit-treatment-pet-id").value = treatment.pet?.id || "";
+    document.getElementById("edit-treatment-disease-ids").value = (treatment.diseases || [])
+        .map(disease => disease.id)
+        .join(",");
+    document.getElementById("edit-treatment-start-date").value = treatment.startDate || "";
+    document.getElementById("edit-treatment-end-date").value = treatment.endDate || "";
+    document.getElementById("edit-treatment-next-checkup").value = treatment.nextCheckupAt
+        ? treatment.nextCheckupAt.slice(0, 16)
+        : "";
+
+    const medicationsContainer = document.getElementById("edit-treatment-medications");
+    medicationsContainer.innerHTML = "";
+    (treatment.treatmentMedications || []).forEach(medication => {
+        medicationsContainer.appendChild(createTreatmentMedicationRow(medication));
+    });
+
+    document.getElementById("treatment-edit-form").classList.add("visible-form");
+    document.getElementById("treatment-edit-form").scrollIntoView({ behavior: "smooth" });
+}
+
+function getEditedTreatmentMedications() {
+    return Array.from(document.querySelectorAll("#edit-treatment-medications .edit-treatment-medication-row"))
+        .map(row => ({
+            medicationId: Number(row.querySelector(".edit-medication-id").value),
+            dosage: row.querySelector(".edit-dosage").value,
+            frequency: row.querySelector(".edit-frequency").value
+        }));
+}
+
 function renderManagementTables(owners, pets, medications, clinics, veterinarians) {
     const ownersBody = document.getElementById("owners-body");
     if (ownersBody) {
@@ -315,6 +358,10 @@ async function handleManagementAction(action, id, data) {
     if (action === "edit-disease") await updateDisease(item);
     if (action === "edit-clinic") await updateClinic(item);
     if (action === "edit-veterinarian") await updateVeterinarian(item);
+    if (action === "edit-treatment") {
+        openTreatmentEdit(item);
+        return;
+    }
 
     if (action === "deactivate-owner" || action === "activate-owner") {
         const endpoint = action === "deactivate-owner" ? "" : "/activate";
@@ -402,6 +449,7 @@ async function loadDashboard() {
             <td>${escapeHtml(dosage)}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
             <td>
+                ${actionButton("edit-treatment", treatment.id, "Düzenle")}
                 ${isActive ? actionButton("complete-treatment", treatment.id, "Bitir") : actionButton("reactivate-treatment", treatment.id, "Aktifleştir")}
                 ${actionButton("cancel-treatment", treatment.id, "İptal")}
                 ${actionButton("delete-treatment", treatment.id, "Sil")}
@@ -611,6 +659,54 @@ function attachFormHandlers() {
         }, "treatment-plan-message");
     });
 
+    document.getElementById("add-edit-treatment-medication")?.addEventListener("click", () => {
+        document.getElementById("edit-treatment-medications")
+            .appendChild(createTreatmentMedicationRow());
+    });
+
+    document.getElementById("edit-treatment-medications")?.addEventListener("click", event => {
+        if (event.target.classList.contains("remove-edit-medication")) {
+            event.target.closest(".edit-treatment-medication-row").remove();
+        }
+    });
+
+    document.getElementById("cancel-treatment-edit")?.addEventListener("click", () => {
+        document.getElementById("treatment-edit-form").classList.remove("visible-form");
+    });
+
+    document.getElementById("update-treatment-form")?.addEventListener("submit", async event => {
+        event.preventDefault();
+        const message = document.getElementById("treatment-edit-message");
+        const treatmentId = document.getElementById("edit-treatment-id").value;
+        const diseaseIds = document.getElementById("edit-treatment-disease-ids").value
+            .split(",")
+            .map(value => Number(value.trim()))
+            .filter(value => Number.isInteger(value) && value > 0);
+
+        try {
+            await request(`/api/treatments/${treatmentId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    petId: Number(document.getElementById("edit-treatment-pet-id").value),
+                    diseaseIds,
+                    medications: getEditedTreatmentMedications(),
+                    startDate: document.getElementById("edit-treatment-start-date").value,
+                    endDate: document.getElementById("edit-treatment-end-date").value || null,
+                    nextCheckupAt: document.getElementById("edit-treatment-next-checkup").value
+                        ? document.getElementById("edit-treatment-next-checkup").value + ":00"
+                        : null
+                })
+            });
+
+            message.textContent = "Tedavi güncellendi.";
+            document.getElementById("treatment-edit-form").classList.remove("visible-form");
+            await loadDashboard();
+        } catch (error) {
+            message.textContent = error.message;
+        }
+    });
+
     document.getElementById("create-treatment-form")?.addEventListener("submit", event => {
         event.preventDefault();
         submitForm(event.target, "/api/treatments", {
@@ -647,7 +743,7 @@ function attachFormHandlers() {
         }
     });
 
-    document.getElementById("management-panel")?.addEventListener("click", async event => {
+    document.addEventListener("click", async event => {
         const button = event.target.closest("[data-action]");
         if (!button) {
             return;
@@ -668,6 +764,7 @@ function attachFormHandlers() {
             "delete-clinic": dashboardData.clinics,
             "edit-veterinarian": dashboardData.veterinarians,
             "delete-veterinarian": dashboardData.veterinarians,
+            "edit-treatment": dashboardData.treatments,
             "complete-treatment": dashboardData.treatments,
             "cancel-treatment": dashboardData.treatments,
             "reactivate-treatment": dashboardData.treatments,
