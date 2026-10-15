@@ -78,6 +78,52 @@ a { color:inherit; text-decoration:none; }
     outline: none;
 }
 
+#create-owner-form select,
+#create-clinic-form input,
+#create-veterinarian-form input,
+#create-veterinarian-form select {
+    padding: 13px;
+    color: var(--black);
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    outline: none;
+    font: inherit;
+}
+
+#create-owner-form select:focus,
+#create-clinic-form input:focus,
+#create-veterinarian-form input:focus,
+#create-veterinarian-form select:focus {
+    border-color: var(--dusty-pink);
+}
+
+#clinic-form,
+#veterinarian-form {
+    margin-top: 20px;
+}
+
+#create-clinic-form,
+#create-veterinarian-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+#create-clinic-form button,
+#create-veterinarian-form button {
+    grid-column: 1 / -1;
+    justify-self: start;
+}
+
+#clinic-message,
+#veterinarian-message {
+    margin-top: 12px;
+    color: var(--antique-green);
+    font-size: 12px;
+}
+
 #create-owner-form input:focus {
     border-color: var(--dusty-pink);
 }
@@ -94,7 +140,9 @@ a { color:inherit; text-decoration:none; }
 }
 
 @media (max-width: 700px) {
-    #create-owner-form {
+    #create-owner-form,
+    #create-clinic-form,
+    #create-veterinarian-form {
         grid-template-columns: 1fr;
     }
 }

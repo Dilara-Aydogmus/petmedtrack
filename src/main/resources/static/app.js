@@ -106,12 +106,40 @@ function logout() {
     showLogin();
 }
 
+function fillClinicSelect(selectId, clinics) {
+    const select = document.getElementById(selectId);
+    if (!select) {
+        return;
+    }
+
+    const selectedValue = select.value;
+    select.innerHTML = '<option value="">Klinik seçin</option>';
+
+    clinics.forEach(clinic => {
+        const option = document.createElement("option");
+        option.value = clinic.id;
+        option.textContent = clinic.name;
+        select.appendChild(option);
+    });
+
+    if (selectedValue) {
+        select.value = selectedValue;
+    }
+}
+
+async function loadReferenceData() {
+    const clinics = await request("/api/clinics");
+    fillClinicSelect("owner-clinic-id", clinics);
+    fillClinicSelect("veterinarian-clinic-id", clinics);
+}
+
 async function loadDashboard() {
     const [owners, pets, medications, treatments] = await Promise.all([
         request("/api/owners"),
         request("/api/pets"),
         request("/api/medications"),
-        request("/api/treatments")
+        request("/api/treatments"),
+        loadReferenceData()
     ]);
 
     document.getElementById("owner-count").textContent = owners.length;
@@ -259,8 +287,29 @@ function attachFormHandlers() {
             firstName: document.getElementById("first-name").value,
             lastName: document.getElementById("last-name").value,
             email: document.getElementById("email").value,
-            phoneNumber: document.getElementById("phone-number").value
+            phoneNumber: document.getElementById("phone-number").value,
+            clinicId: Number(document.getElementById("owner-clinic-id").value)
         }, "owner-message");
+    });
+
+    document.getElementById("create-clinic-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+        submitForm(event.target, "/api/clinics", {
+            name: document.getElementById("clinic-name").value,
+            address: document.getElementById("clinic-address").value,
+            phoneNumber: document.getElementById("clinic-phone-number").value
+        }, "clinic-message");
+    });
+
+    document.getElementById("create-veterinarian-form")?.addEventListener("submit", event => {
+        event.preventDefault();
+        submitForm(event.target, "/api/veterinarians", {
+            firstName: document.getElementById("veterinarian-first-name").value,
+            lastName: document.getElementById("veterinarian-last-name").value,
+            email: document.getElementById("veterinarian-email").value,
+            phoneNumber: document.getElementById("veterinarian-phone-number").value,
+            clinicId: Number(document.getElementById("veterinarian-clinic-id").value)
+        }, "veterinarian-message");
     });
 
     document.getElementById("create-pet-form")?.addEventListener("submit", event => {

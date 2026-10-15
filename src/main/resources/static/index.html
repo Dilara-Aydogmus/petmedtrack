@@ -6,7 +6,6 @@
     <title>PetMedTrack | Dashboard</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-<script src="/app.js"></script>
 <body>
 <div class="app-shell">
     <aside class="sidebar">
@@ -135,6 +134,9 @@
                 <input id="last-name" placeholder="Soyad" required>
                 <input id="email" type="email" placeholder="E-posta" required>
                 <input id="phone-number" placeholder="Telefon" required>
+                <select id="owner-clinic-id" required>
+                    <option value="">Klinik seçin</option>
+                </select>
 
                 <button type="submit" class="primary-button">
                     Sahibi kaydet
@@ -142,6 +144,32 @@
             </form>
 
             <p id="owner-message"></p>
+        </section>
+
+        <section class="panel" id="clinic-form">
+            <h2>Yeni klinik ekle</h2>
+            <form id="create-clinic-form">
+                <input id="clinic-name" placeholder="Klinik adı" required>
+                <input id="clinic-address" placeholder="Adres">
+                <input id="clinic-phone-number" placeholder="Telefon" required>
+                <button type="submit" class="primary-button">Kliniği kaydet</button>
+            </form>
+            <p id="clinic-message"></p>
+        </section>
+
+        <section class="panel" id="veterinarian-form">
+            <h2>Yeni veteriner ekle</h2>
+            <form id="create-veterinarian-form">
+                <input id="veterinarian-first-name" placeholder="Ad" required>
+                <input id="veterinarian-last-name" placeholder="Soyad" required>
+                <input id="veterinarian-email" type="email" placeholder="E-posta" required>
+                <input id="veterinarian-phone-number" placeholder="Telefon" required>
+                <select id="veterinarian-clinic-id" required>
+                    <option value="">Klinik seçin</option>
+                </select>
+                <button type="submit" class="primary-button">Veterineri kaydet</button>
+            </form>
+            <p id="veterinarian-message"></p>
         </section>
 
         <section class="panel" id="pet-form">
