@@ -8,9 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
+
 @Configuration
+@EnableRabbit
 public class RabbitMqConfig {
-    public static final String EMAIL_QUEUE =    "petmedtrack.email.queue";
+    public static final String EMAIL_QUEUE = "petmedtrack.email.queue";
 
     @Bean
     public Queue emailQueue(){
