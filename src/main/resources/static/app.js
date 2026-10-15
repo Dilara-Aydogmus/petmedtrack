@@ -1,4 +1,4 @@
-let auth = sessionStorage.getItem("petmedtrack-auth");
+﻿let auth = sessionStorage.getItem("petmedtrack-auth");
 let formHandlersAttached = false;
 let dashboardData = {
     owners: [], pets: [], medications: [], diseases: [], treatments: [], clinics: [], veterinarians: []
@@ -23,17 +23,17 @@ async function request(url, options = {}, token = auth) {
         if (token === auth) {
             logout();
         }
-        throw new Error("Kullanıcı adı veya şifre hatalı.");
+        throw new Error("KullanÄ±cÄ± adÄ± veya ÅŸifre hatalÄ±.");
     }
 
     if (!response.ok) {
-        let message = "İşlem tamamlanamadı.";
+        let message = "Ä°ÅŸlem tamamlanamadÄ±.";
         try {
             message = await response.text();
         } catch (ignored) {
-            // Sunucu cevap vermediyse varsayılan mesajı kullan.
+            // Sunucu cevap vermediyse varsayÄ±lan mesajÄ± kullan.
         }
-        throw new Error(message || "İşlem tamamlanamadı.");
+        throw new Error(message || "Ä°ÅŸlem tamamlanamadÄ±.");
     }
 
     if (response.status === 204) {
@@ -52,22 +52,82 @@ function showLogin() {
     loginScreen.id = "login-screen";
     loginScreen.innerHTML = `
         <div class="login-card">
-            <div class="login-mark">✦</div>
+            <div class="login-mark">âœ¦</div>
             <p class="eyebrow">PETMEDTRACK</p>
-            <h1>Hoş geldin</h1>
-            <p class="login-description">Kliniğinin bakım paneline giriş yap.</p>
+            <h1>HoÅŸ geldin</h1>
+            <p class="login-description">KliniÄŸinin bakÄ±m paneline giriÅŸ yap.</p>
             <form id="login-form">
-                <label for="login-username">Kullanıcı adı</label>
+                <label for="login-username">KullanÄ±cÄ± adÄ±</label>
                 <input id="login-username" autocomplete="username" required>
-                <label for="login-password">Şifre</label>
+                <label for="login-password">Åžifre</label>
                 <input id="login-password" type="password" autocomplete="current-password" required>
-                <button class="primary-button" type="submit">Giriş yap</button>
+                <button class="primary-button" type="submit">GiriÅŸ yap</button>
                 <p id="login-message" class="login-message"></p>
+            </form>
+            <button id="show-register" class="text-button" type="button">Yeni kullanıcı oluştur</button>
+            <form id="register-form" class="register-form hidden-form">
+                <label for="register-username">Yeni kullanıcı adı</label>
+                <input id="register-username" autocomplete="username" required>
+                <label for="register-password">Şifre</label>
+                <input id="register-password" type="password" autocomplete="new-password" required>
+                <label for="register-role">Rol</label>
+                <select id="register-role">
+                    <option value="USER">Kullanıcı</option>
+                    <option value="VET">Veteriner</option>
+                </select>
+                <div id="register-veterinarian-field" class="hidden-form">
+                    <label for="register-veterinarian-id">Veteriner ID</label>
+                    <input id="register-veterinarian-id" type="number" min="1">
+                </div>
+                <button class="primary-button" type="submit">Kayıt ol</button>
+                <p id="register-message" class="login-message"></p>
             </form>
         </div>
     `;
 
     document.body.appendChild(loginScreen);
+
+    document.getElementById("show-register").addEventListener("click", () => {
+        document.getElementById("register-form").classList.toggle("hidden-form");
+    });
+
+    document.getElementById("register-role").addEventListener("change", event => {
+        document.getElementById("register-veterinarian-field")
+            .classList.toggle("hidden-form", event.target.value !== "VET");
+    });
+
+    document.getElementById("register-form").addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const role = document.getElementById("register-role").value;
+        const message = document.getElementById("register-message");
+        const requestBody = {
+            username: document.getElementById("register-username").value.trim(),
+            password: document.getElementById("register-password").value,
+            role: role,
+            veterinarianId: role === "VET"
+                ? Number(document.getElementById("register-veterinarian-id").value)
+                : null
+        };
+
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(await response.text() || "Kayıt oluşturulamadı.");
+            }
+
+            message.textContent = "Kayıt başarılı. Şimdi giriş yapabilirsiniz.";
+            document.getElementById("login-username").value = requestBody.username;
+            document.getElementById("register-form").reset();
+        } catch (error) {
+            message.textContent = error.message;
+        }
+    });
 
     document.getElementById("login-form").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -89,7 +149,7 @@ function showLogin() {
             });
 
             if (!response.ok) {
-                throw new Error("Kullanıcı adı veya şifre hatalı.");
+                throw new Error("KullanÄ±cÄ± adÄ± veya ÅŸifre hatalÄ±.");
             }
 
             auth = await response.text();
@@ -116,7 +176,7 @@ function fillClinicSelect(selectId, clinics) {
     }
 
     const selectedValue = select.value;
-    select.innerHTML = '<option value="">Klinik seçin</option>';
+    select.innerHTML = '<option value="">Klinik seÃ§in</option>';
 
     clinics.forEach(clinic => {
         const option = document.createElement("option");
@@ -136,6 +196,24 @@ async function loadReferenceData() {
     fillClinicSelect("veterinarian-clinic-id", clinics);
 }
 
+async function loadCurrentUser() {
+    const currentUser = await request("/api/auth/me");
+    const userName = currentUser.veterinarianName || currentUser.username || "KullanÄ±cÄ±";
+    const clinicName = currentUser.clinicName || "Klinik bilgisi yok";
+    const initials = userName
+        .split(" ")
+        .filter(Boolean)
+        .map(part => part.charAt(0))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
+    document.getElementById("current-user-name").textContent = userName;
+    document.getElementById("current-user-welcome").textContent = userName;
+    document.getElementById("current-clinic-name").textContent = clinicName;
+    document.getElementById("current-user-avatar").textContent = initials || "U";
+}
+
 function actionButton(action, id, label) {
     return `<button type="button" class="table-action" data-action="${action}" data-id="${id}">${label}</button>`;
 }
@@ -144,9 +222,9 @@ function createTreatmentMedicationRow(medication = {}) {
     const row = document.createElement("div");
     row.className = "treatment-medication-row edit-treatment-medication-row";
     row.innerHTML = `
-        <input class="edit-medication-id" type="number" placeholder="İlaç ID" value="${medication.medication?.id || medication.medicationId || ""}" required>
+        <input class="edit-medication-id" type="number" placeholder="Ä°laÃ§ ID" value="${medication.medication?.id || medication.medicationId || ""}" required>
         <input class="edit-dosage" placeholder="Doz" value="${escapeHtml(medication.dosage || "")}" required>
-        <input class="edit-frequency" placeholder="Sıklık" value="${escapeHtml(medication.frequency || "")}" required>
+        <input class="edit-frequency" placeholder="SÄ±klÄ±k" value="${escapeHtml(medication.frequency || "")}" required>
         <button type="button" class="table-action remove-edit-medication">Sil</button>
     `;
     return row;
@@ -183,6 +261,60 @@ function getEditedTreatmentMedications() {
         }));
 }
 
+function renderCalendar(treatments) {
+    const today = new Date();
+    const day = document.getElementById("calendar-day");
+    const month = document.getElementById("calendar-month");
+    const weekday = document.getElementById("calendar-weekday");
+    const reminders = document.getElementById("calendar-reminders");
+
+    if (!day || !month || !weekday || !reminders) {
+        return;
+    }
+
+    day.textContent = today.getDate();
+    month.textContent = today.toLocaleDateString("tr-TR", { month: "long" });
+    weekday.textContent = today.toLocaleDateString("tr-TR", { weekday: "long" });
+
+    const upcomingTreatments = treatments
+        .filter(treatment => treatment.nextCheckupAt)
+        .map(treatment => ({
+            treatment,
+            date: new Date(treatment.nextCheckupAt)
+        }))
+        .filter(item => item.date >= today)
+        .sort((first, second) => first.date - second.date)
+        .slice(0, 5);
+
+    if (upcomingTreatments.length === 0) {
+        reminders.innerHTML = '<p class="empty-state">YaklaÅŸan kontrol yok.</p>';
+        return;
+    }
+
+    reminders.innerHTML = upcomingTreatments.map(({ treatment, date }, index) => {
+        const petName = treatment.pet?.name || "Bilinmeyen hasta";
+        const time = date.toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+        const dateText = date.toLocaleDateString("tr-TR", {
+            day: "2-digit",
+            month: "2-digit"
+        });
+        const appointmentClass = index % 2 === 0 ? "" : "green-appointment";
+
+        return `
+            <div class="calendar-line">
+                <span class="time">${dateText}<br>${time}</span>
+                <div class="appointment ${appointmentClass}">
+                    <strong>${escapeHtml(petName)} kontrolÃ¼</strong>
+                    <span>Tedavi kontrolÃ¼</span>
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
 function renderManagementTables(owners, pets, medications, clinics, veterinarians) {
     const ownersBody = document.getElementById("owners-body");
     if (ownersBody) {
@@ -193,10 +325,10 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
                 <td>${escapeHtml(owner.phoneNumber)}</td>
                 <td>${escapeHtml(owner.clinic?.name || "-")}</td>
                 <td>${owner.active ? "Aktif" : "Pasif"}</td>
-                <td>${actionButton("edit-owner", owner.id, "Düzenle")}
-                    ${owner.active ? actionButton("deactivate-owner", owner.id, "Pasifleştir") : actionButton("activate-owner", owner.id, "Aktifleştir")}</td>
+                <td>${actionButton("edit-owner", owner.id, "DÃ¼zenle")}
+                    ${owner.active ? actionButton("deactivate-owner", owner.id, "PasifleÅŸtir") : actionButton("activate-owner", owner.id, "AktifleÅŸtir")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="6" class="empty-state">Kayıt yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="6" class="empty-state">KayÄ±t yok.</td></tr>`;
     }
 
     const petsBody = document.getElementById("pets-body");
@@ -205,11 +337,14 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
             <tr>
                 <td>${escapeHtml(pet.name)}</td>
                 <td>${escapeHtml(pet.species)} / ${escapeHtml(pet.breed || "-")}</td>
-                <td>${pet.ageYears ?? 0} yıl ${pet.ageMonths ?? 0} ay</td>
+                <td>${pet.ageYears ?? 0} yÄ±l ${pet.ageMonths ?? 0} ay</td>
+                <td>${pet.weight ?? "-"} kg</td>
+                <td>${pet.height ?? "-"} cm</td>
+                <td>${pet.neutered ? "Evet" : "HayÄ±r"}</td>
                 <td>${escapeHtml(pet.owner?.firstName || "-")} ${escapeHtml(pet.owner?.lastName || "")}</td>
-                <td>${actionButton("edit-pet", pet.id, "Düzenle")} ${actionButton("delete-pet", pet.id, "Sil")}</td>
+                <td>${actionButton("edit-pet", pet.id, "DÃ¼zenle")} ${actionButton("delete-pet", pet.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="5" class="empty-state">Kayıt yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="8" class="empty-state">KayÄ±t yok.</td></tr>`;
     }
 
     const medicationsBody = document.getElementById("medications-body");
@@ -218,9 +353,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
             <tr>
                 <td>${escapeHtml(medication.name)}</td>
                 <td>${escapeHtml(medication.createdAt || "-")}</td>
-                <td>${actionButton("edit-medication", medication.id, "Düzenle")} ${actionButton("delete-medication", medication.id, "Sil")}</td>
+                <td>${actionButton("edit-medication", medication.id, "DÃ¼zenle")} ${actionButton("delete-medication", medication.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="3" class="empty-state">Kayıt yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="3" class="empty-state">KayÄ±t yok.</td></tr>`;
     }
 
     const diseasesBody = document.getElementById("diseases-body");
@@ -228,9 +363,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
         diseasesBody.innerHTML = (dashboardData.diseases || []).map(disease => `
             <tr>
                 <td>${escapeHtml(disease.name)}</td>
-                <td>${actionButton("edit-disease", disease.id, "Düzenle")} ${actionButton("delete-disease", disease.id, "Sil")}</td>
+                <td>${actionButton("edit-disease", disease.id, "DÃ¼zenle")} ${actionButton("delete-disease", disease.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="2" class="empty-state">Kayıt yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="2" class="empty-state">KayÄ±t yok.</td></tr>`;
     }
 
     const clinicsBody = document.getElementById("clinics-body");
@@ -240,9 +375,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
                 <td>${escapeHtml(clinic.name)}</td>
                 <td>${escapeHtml(clinic.address || "-")}</td>
                 <td>${escapeHtml(clinic.phoneNumber)}</td>
-                <td>${actionButton("edit-clinic", clinic.id, "Düzenle")} ${actionButton("delete-clinic", clinic.id, "Sil")}</td>
+                <td>${actionButton("edit-clinic", clinic.id, "DÃ¼zenle")} ${actionButton("delete-clinic", clinic.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="4" class="empty-state">Kayıt yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="4" class="empty-state">KayÄ±t yok.</td></tr>`;
     }
 
     const veterinariansBody = document.getElementById("veterinarians-body");
@@ -252,9 +387,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
                 <td>${escapeHtml(veterinarian.firstName)} ${escapeHtml(veterinarian.lastName)}</td>
                 <td>${escapeHtml(veterinarian.email)}</td>
                 <td>${escapeHtml(veterinarian.clinic?.name || "-")}</td>
-                <td>${actionButton("edit-veterinarian", veterinarian.id, "Düzenle")} ${actionButton("delete-veterinarian", veterinarian.id, "Sil")}</td>
+                <td>${actionButton("edit-veterinarian", veterinarian.id, "DÃ¼zenle")} ${actionButton("delete-veterinarian", veterinarian.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="4" class="empty-state">Kayıt yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="4" class="empty-state">KayÄ±t yok.</td></tr>`;
     }
 }
 
@@ -276,8 +411,8 @@ async function updateOwner(owner) {
 }
 
 async function updatePet(pet) {
-    const name = prompt("Hayvan adı", pet.name);
-    const species = prompt("Tür", pet.species);
+    const name = prompt("Hayvan adÄ±", pet.name);
+    const species = prompt("TÃ¼r", pet.species);
     const breed = prompt("Irk", pet.breed || "");
     if (!name || !species) return;
 
@@ -297,7 +432,7 @@ async function updatePet(pet) {
 }
 
 async function updateMedication(medication) {
-    const name = prompt("İlaç adı", medication.name);
+    const name = prompt("Ä°laÃ§ adÄ±", medication.name);
     if (!name) return;
 
     await request(`/api/medications/${medication.id}`, {
@@ -308,7 +443,7 @@ async function updateMedication(medication) {
 }
 
 async function updateDisease(disease) {
-    const name = prompt("Hastalık adı", disease.name);
+    const name = prompt("HastalÄ±k adÄ±", disease.name);
     if (!name) return;
 
     await request(`/api/diseases/${disease.id}`, {
@@ -319,7 +454,7 @@ async function updateDisease(disease) {
 }
 
 async function updateClinic(clinic) {
-    const name = prompt("Klinik adı", clinic.name);
+    const name = prompt("Klinik adÄ±", clinic.name);
     const address = prompt("Adres", clinic.address || "");
     const phoneNumber = prompt("Telefon", clinic.phoneNumber);
     if (!name || !phoneNumber) return;
@@ -374,7 +509,7 @@ async function handleManagementAction(action, id, data) {
             "delete-disease": "diseases",
             "delete-clinic": "clinics", "delete-veterinarian": "veterinarians"
         }[action];
-        if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+        if (confirm("Bu kaydÄ± silmek istediÄŸinize emin misiniz?")) {
             await request(`/api/${endpoint}/${id}`, { method: "DELETE" });
         }
     }
@@ -402,6 +537,7 @@ async function loadDashboard() {
     fillClinicSelect("veterinarian-clinic-id", clinics);
     dashboardData = { owners, pets, medications, diseases, treatments, clinics, veterinarians };
     renderManagementTables(owners, pets, medications, clinics, veterinarians);
+    renderCalendar(treatments);
 
     document.getElementById("owner-count").textContent = owners.length;
     document.getElementById("pet-count").textContent = pets.length;
@@ -418,14 +554,14 @@ async function loadDashboard() {
 
     if (treatments.length === 0) {
         treatmentsBody.innerHTML = `
-            <tr><td colspan="4" class="empty-state">Henüz tedavi kaydı yok.</td></tr>
+            <tr><td colspan="4" class="empty-state">HenÃ¼z tedavi kaydÄ± yok.</td></tr>
         `;
         return;
     }
 
     treatments.forEach(treatment => {
         const isActive = !treatment.endDate || new Date(treatment.endDate) >= today;
-        const statusText = isActive ? "Aktif" : "Tamamlandı";
+        const statusText = isActive ? "Aktif" : "TamamlandÄ±";
         const statusClass = isActive ? "active-status" : "completed-status";
         const petName = treatment.pet?.name || "Bilinmeyen hasta";
         const species = treatment.pet?.species || "-";
@@ -435,7 +571,7 @@ async function loadDashboard() {
             : medications.map(item => item.medication?.name || "-").join(", ");
         const dosage = medications.length === 0
             ? "-"
-            : medications.map(item => `${item.dosage} · ${item.frequency}`).join(", ");
+            : medications.map(item => `${item.dosage} Â· ${item.frequency}`).join(", ");
 
         const row = document.createElement("tr");
         row.innerHTML = `
@@ -449,9 +585,9 @@ async function loadDashboard() {
             <td>${escapeHtml(dosage)}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
             <td>
-                ${actionButton("edit-treatment", treatment.id, "Düzenle")}
-                ${isActive ? actionButton("complete-treatment", treatment.id, "Bitir") : actionButton("reactivate-treatment", treatment.id, "Aktifleştir")}
-                ${actionButton("cancel-treatment", treatment.id, "İptal")}
+                ${actionButton("edit-treatment", treatment.id, "DÃ¼zenle")}
+                ${isActive ? actionButton("complete-treatment", treatment.id, "Bitir") : actionButton("reactivate-treatment", treatment.id, "AktifleÅŸtir")}
+                ${actionButton("cancel-treatment", treatment.id, "Ä°ptal")}
                 ${actionButton("delete-treatment", treatment.id, "Sil")}
             </td>
         `;
@@ -468,7 +604,7 @@ async function submitForm(form, url, data, messageId) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         });
-        message.textContent = "Başarıyla kaydedildi.";
+        message.textContent = "BaÅŸarÄ±yla kaydedildi.";
         form.reset();
         await loadDashboard();
     } catch (error) {
@@ -487,7 +623,7 @@ function renderOwnerSearchResults(owners) {
     results.innerHTML = owners.map(owner => `
         <div class="search-result">
             <strong>${escapeHtml(owner.firstName)} ${escapeHtml(owner.lastName)}</strong>
-            <small>${escapeHtml(owner.email)} · ${owner.active ? "Aktif" : "Pasif"}</small>
+            <small>${escapeHtml(owner.email)} Â· ${owner.active ? "Aktif" : "Pasif"}</small>
         </div>
     `).join("");
 }
@@ -503,7 +639,7 @@ function renderPetSearchResults(pets) {
     results.innerHTML = pets.map(pet => `
         <div class="search-result">
             <strong>${escapeHtml(pet.name)}</strong>
-            <small>${escapeHtml(pet.species)} · ${escapeHtml(pet.breed || "Irk bilgisi yok")}</small>
+            <small>${escapeHtml(pet.species)} Â· ${escapeHtml(pet.breed || "Irk bilgisi yok")}</small>
         </div>
     `).join("");
 }
@@ -699,7 +835,7 @@ function attachFormHandlers() {
                 })
             });
 
-            message.textContent = "Tedavi güncellendi.";
+            message.textContent = "Tedavi gÃ¼ncellendi.";
             document.getElementById("treatment-edit-form").classList.remove("visible-form");
             await loadDashboard();
         } catch (error) {
@@ -787,6 +923,7 @@ function attachFormHandlers() {
 async function initDashboard() {
     attachFormHandlers();
     try {
+        await loadCurrentUser();
         await loadDashboard();
     } catch (error) {
         console.error(error);
