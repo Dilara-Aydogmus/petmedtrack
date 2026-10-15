@@ -19,14 +19,16 @@ public class UserService implements UserDetailsService {
     }
 
     public User save(User user){
-        if (userRepository.findByUsername(user.getUsername()).isPresent()){
-            throw new IllegalArgumentException("Username already exists");
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+    User existingUser = userRepository.findByUsername(user.getUsername());
+    if(existingUser != null){
+        throw new IllegalArgumentException("Username already exists");
     }
+    user.setPassword(passwordEncoder.encode(user.getPassword()));
+    return userRepository.save(user);
+    }
+
     public User findByUsername(String username){
-        return userRepository.findByUsername(username).orElse(null);
+        return userRepository.findByUsername(username);
     }
 
     public boolean login(String username, String password){

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface PetRepository extends JpaRepository<Pet, Long>, JpaSpecificationExecutor<Pet> {
@@ -13,5 +14,7 @@ public interface PetRepository extends JpaRepository<Pet, Long>, JpaSpecificatio
     Pet findPet(@Param("id") Long id);
 
     List<Pet> findByOwnerId(Long ownerId);
+    Pet findPetByIdAndOwnerClinicId(Long petId, Long clinicId);
+    List<Pet> findByOwnerClinicId(Long clinicId);
 
 }

@@ -5,7 +5,7 @@ import org.example.treatment.Treatment;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.Optional;
+
 import org.example.pet.Pet;
 import org.example.pet.PetRepository;
 import org.example.treatment.TreatmentRepository;
@@ -19,6 +19,8 @@ import org.example.owner.specification.OwnerNameSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.example.clinic.Clinic;
 import org.example.clinic.ClinicService;
+import org.example.auth.CurrentUserService;
+import org.example.owner.specification.OwnerClinicSpecification;
 
 @Service
 public class OwnerService {
@@ -27,29 +29,33 @@ public class OwnerService {
     private final TreatmentRepository treatmentRepository;
     private final EmailProducer emailProducer;
     private final ClinicService clinicService;
+    private final CurrentUserService currentUserService;
 
-    public OwnerService(OwnerRepository ownerRepository, PetRepository petRepository, TreatmentRepository treatmentRepository, EmailProducer emailProducer, ClinicService clinicService) {
+    public OwnerService(OwnerRepository ownerRepository, PetRepository petRepository,
+                        TreatmentRepository treatmentRepository, EmailProducer emailProducer,
+                        ClinicService clinicService, CurrentUserService currentUserService) {
         this.ownerRepository = ownerRepository;
         this.petRepository = petRepository;
         this.treatmentRepository = treatmentRepository;
         this.emailProducer = emailProducer;
         this.clinicService = clinicService;
+        this.currentUserService = currentUserService;
     }
     @Cacheable(value = "owners")
     public List<Owner> findAll() {
-        return ownerRepository.findByActiveTrue();
+        Long clinicId = currentUserService.getCurrentClinicId();
+        return ownerRepository.findByClinicIdAndActiveTrue(clinicId);
     }
 
     @Cacheable(value = "owners", key = "#id")
     public Owner findById(Long id){
-        Optional<Owner> ownerOptional = ownerRepository.findById(id);
+        Long clinicId = currentUserService.getCurrentClinicId();
+        Owner owner = ownerRepository.findOwnerByIdAndClinicId(id, clinicId);
 
-        if(ownerOptional.isEmpty()) {
-            String errorMessage = "Owner not found:" + id;
-            throw new ResourceNotFoundException(errorMessage);
+        if(owner == null){
+            throw new ResourceNotFoundException("Owner not found in current clinic: " + id);
         }
 
-        Owner owner = ownerOptional.get();
         return owner;
     }
 
@@ -61,7 +67,11 @@ public class OwnerService {
         if (ownerRepository.existsByPhoneNumber(request.getPhoneNumber())){
             throw new IllegalArgumentException("Phone number already exists");
         }
-        Clinic clinic = clinicService.findById(request.getClinicId());
+        Long currentClinicId = currentUserService.getCurrentClinicId();
+        if(!currentClinicId.equals(request.getClinicId())){
+            throw new IllegalArgumentException("You connot create an owner for another clinic");
+        }
+        Clinic clinic = clinicService.findById(currentClinicId);
         Owner owner = new Owner(
                 request.getFirstName(),
                 request.getLastName(),
@@ -96,6 +106,10 @@ public class OwnerService {
         if(ownerRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), id)){
             throw new IllegalArgumentException("Phone number already exists");}
 
+        Long currentClinicId = currentUserService.getCurrentClinicId();
+        if(!currentClinicId.equals(request.getClinicId())){
+            throw new IllegalArgumentException("You cannot move an owner to another clinic");
+        }
         owner.setFirstName(request.getFirstName());
         owner.setLastName(request.getLastName());
         owner.setEmail(request.getEmail());
@@ -118,11 +132,10 @@ public class OwnerService {
 
     @CacheEvict(value = "owners", allEntries = true)
     public void activateById(Long id) {
-        Optional<Owner> ownerOptional = ownerRepository.findById(id);
-        if(ownerOptional.isEmpty()){
-            throw new ResourceNotFoundException("Owner not found: " + id);
-        }
-        Owner owner = ownerOptional.get();
+      Owner owner = ownerRepository.findOwnerById(id);
+      if(owner == null){
+          throw new ResourceNotFoundException("Owner not found: " + id);
+      }
         owner.setActive(true);
         ownerRepository.save(owner);
     }
@@ -136,11 +149,10 @@ public class OwnerService {
     })
     @Transactional
     public void permanentlyDeleteById(Long id){
-        Optional<Owner> ownerOptional = ownerRepository.findById(id);
-        if (ownerOptional.isEmpty()){
-            throw new ResourceNotFoundException("Owner not found" + id);
+        Owner owner = ownerRepository.findOwnerById(id);
+        if(owner==null){
+            throw new ResourceNotFoundException("Owner not found: " + id);
         }
-        Owner owner = ownerOptional.get();
         if(owner.isActive()){
             throw new IllegalArgumentException("Owner must be inactive before permanent deletion");
         }
@@ -154,9 +166,12 @@ public class OwnerService {
     }
 
     public List<Owner> search(String name, Boolean active) {
+        Long clinicId = currentUserService.getCurrentClinicId();
+
         Specification<Owner> specification =
                 new OwnerNameSpecification(name)
-                        .and(new OwnerActiveSpecification(active));
+                        .and(new OwnerActiveSpecification(active))
+                        .and(OwnerClinicSpecification.belongsToClinic(clinicId));
 
         return ownerRepository.findAll(specification);
     }

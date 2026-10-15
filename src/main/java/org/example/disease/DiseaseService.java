@@ -17,11 +17,14 @@ public class DiseaseService
     public List<Disease> findAll(){
         return diseaseRepository.findAll();
     }
+
     public Disease findById(Long id){
-        return diseaseRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(
-                "Disease not found:" + id
-        )
-        );    }
+        Disease disease = diseaseRepository.findDisease(id);
+        if(disease == null){
+            throw new ResourceNotFoundException("Disease not found: " + id);
+        }
+        return disease;
+    }
 
     public Disease create(CreateDiseaseRequest request){
         if(diseaseRepository.existsByName(request.getName())){

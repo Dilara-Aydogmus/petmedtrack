@@ -30,7 +30,7 @@ public class TreatmentMedication {
     @JoinColumn(name = "treatment_id", nullable = false)
     private Treatment treatment;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "medication_id", nullable = false)
     private Medication medication;
 

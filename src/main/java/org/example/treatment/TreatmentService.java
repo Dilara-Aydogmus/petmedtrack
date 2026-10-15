@@ -17,11 +17,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.example.auth.CurrentUserService;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 
@@ -32,25 +32,31 @@ public class TreatmentService {
     private final MedicationService medicationService;
     private final EmailProducer emailProducer;
     private final DiseaseRepository diseaseRepository;
+    private final CurrentUserService currentUserService;
 
-    public TreatmentService(TreatmentRepository treatmentRepository, PetService petService, MedicationService medicationService, EmailProducer emailProducer, DiseaseRepository diseaseRepository) {
+    public TreatmentService(TreatmentRepository treatmentRepository, PetService petService
+            , MedicationService medicationService, EmailProducer emailProducer,
+                            DiseaseRepository diseaseRepository, CurrentUserService currentUserService) {
         this.treatmentRepository = treatmentRepository;
         this.petService = petService;
         this.medicationService = medicationService;
         this.emailProducer = emailProducer;
         this.diseaseRepository = diseaseRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Cacheable(value = "treatments")
     public List<Treatment> findAll() {
-        return treatmentRepository.findAll();
-    }
+    Long clinicId  = currentUserService.getCurrentClinicId();
+    return treatmentRepository.findByPetOwnerClinicId(clinicId);
+        }
 
     @Cacheable(value = "treatments", key = "#id")
     public Treatment findById(Long id) {
-        Treatment treatment = treatmentRepository.findTreatment(id);
-        if (treatment == null) {
-            throw new ResourceNotFoundException("Treatment not found:" + id);
+        Long clinicId = currentUserService.getCurrentClinicId();
+        Treatment treatment = treatmentRepository.findByIdAndPetOwnerClinicId(id, clinicId);
+        if(treatment == null){
+            throw new ResourceNotFoundException("Treatment not found in current clinic: " + id);
         }
         return treatment;
     }
@@ -177,14 +183,14 @@ public class TreatmentService {
         }
     }
 
-    private Set<Disease> findDiseases(Set<Long> diseaseIds){
+    private Set<Disease> findDiseases(Set<Long> diseaseIds) {
         Set<Disease> diseases = new HashSet<>();
-        for(Long diseaseId : diseaseIds){
-            Optional<Disease> diseaseOptional = diseaseRepository.findById(diseaseId);
-            if(diseaseOptional.isEmpty()){
-                throw new ResourceNotFoundException("Disease not found:" + diseaseId);
+        for (Long diseaseId : diseaseIds) {
+            Disease disease = diseaseRepository.findDisease(diseaseId);
+            if (disease == null) {
+                throw new ResourceNotFoundException("Disease not found: " + diseaseId);
             }
-            diseases.add(diseaseOptional.get());
+            diseases.add(disease);
         }
         return diseases;
     }

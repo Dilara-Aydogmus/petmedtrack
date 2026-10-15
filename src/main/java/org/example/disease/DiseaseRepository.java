@@ -1,10 +1,12 @@
 package org.example.disease;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface DiseaseRepository extends JpaRepository<Disease, Long> {
-    Optional<Disease> findByName(String name);
+    @Query("SELECT d FROM Disease d WHERE d.id = :id")
+    Disease findDisease(@Param("id") Long id);
+    Disease findByName(String name);
     boolean existsByName(String name);
 }

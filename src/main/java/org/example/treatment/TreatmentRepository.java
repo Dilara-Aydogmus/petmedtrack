@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 public interface TreatmentRepository extends JpaRepository<Treatment, Long> {
 
     @Query("""
@@ -29,4 +30,7 @@ public interface TreatmentRepository extends JpaRepository<Treatment, Long> {
     List<Treatment> findTreatmentsDueForCheckup(
             @Param("dateTime") LocalDateTime dateTime
     );
+
+    Treatment findByIdAndPetOwnerClinicId(Long treatmentId, Long clinicId);
+    List<Treatment> findByPetOwnerClinicId(Long clinicId);
 }

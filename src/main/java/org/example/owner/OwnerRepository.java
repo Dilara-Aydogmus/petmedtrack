@@ -11,5 +11,7 @@ public interface OwnerRepository extends JpaRepository<Owner, Long>, JpaSpecific
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, Long id);
 
     List<Owner> findByActiveTrue();
-
+    List<Owner> findByClinicIdAndActiveTrue(Long clinicId);
+    Owner findOwnerByIdAndClinicId(Long id, Long clinicId);
+    Owner findOwnerById(Long id);
 }
