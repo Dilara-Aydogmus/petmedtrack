@@ -2,6 +2,7 @@ package org.example.owner.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -23,6 +24,9 @@ public class CreateOwnerRequest {
 
     @NotBlank(message = "Phone number is required")
     private String phoneNumber;
+
+    @NotNull(message = "Clinic id is required")
+    private Long clinicId;
 
 
 

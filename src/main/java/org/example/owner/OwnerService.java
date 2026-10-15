@@ -17,6 +17,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.example.owner.specification.OwnerActiveSpecification;
 import org.example.owner.specification.OwnerNameSpecification;
 import org.springframework.data.jpa.domain.Specification;
+import org.example.clinic.Clinic;
+import org.example.clinic.ClinicService;
 
 @Service
 public class OwnerService {
@@ -24,12 +26,14 @@ public class OwnerService {
     private final PetRepository petRepository;
     private final TreatmentRepository treatmentRepository;
     private final EmailProducer emailProducer;
+    private final ClinicService clinicService;
 
-    public OwnerService(OwnerRepository ownerRepository, PetRepository petRepository, TreatmentRepository treatmentRepository, EmailProducer emailProducer) {
+    public OwnerService(OwnerRepository ownerRepository, PetRepository petRepository, TreatmentRepository treatmentRepository, EmailProducer emailProducer, ClinicService clinicService) {
         this.ownerRepository = ownerRepository;
         this.petRepository = petRepository;
         this.treatmentRepository = treatmentRepository;
         this.emailProducer = emailProducer;
+        this.clinicService = clinicService;
     }
     @Cacheable(value = "owners")
     public List<Owner> findAll() {
@@ -57,7 +61,15 @@ public class OwnerService {
         if (ownerRepository.existsByPhoneNumber(request.getPhoneNumber())){
             throw new IllegalArgumentException("Phone number already exists");
         }
-        Owner owner = new Owner(request.getFirstName(), request.getLastName(), request.getEmail(), request.getPhoneNumber());
+        Clinic clinic = clinicService.findById(request.getClinicId());
+        Owner owner = new Owner(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getEmail(),
+                request.getPhoneNumber(),
+                clinic
+        );
+
         Owner savedOwner = save(owner);
 
         EmailMessage emailMessage = new EmailMessage(savedOwner.getEmail(),"PetMedTrack'e hoş geldiniz",
@@ -74,6 +86,8 @@ public class OwnerService {
     @CacheEvict(value = "owners", allEntries = true)
     public Owner update(Long id, CreateOwnerRequest request){
         Owner owner = findById(id);
+        Clinic clinic = clinicService.findById(request.getClinicId());
+        owner.setClinic(clinic);
 
         if(ownerRepository.existsByEmailAndIdNot(request.getEmail(), id)){
             throw new IllegalArgumentException("Email already exists");

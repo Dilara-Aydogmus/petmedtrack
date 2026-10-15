@@ -89,8 +89,8 @@ public class PetService {
             @CacheEvict(value = "petsByOwner", allEntries = true)
     })
     public void deleteById(Long id) {
-        findById(id);
-        petRepository.deleteById(id);
+        Pet pet = findById(id);
+        petRepository.delete(pet);
     }
 
     public List<Pet> search(String name, String species){
@@ -100,8 +100,8 @@ public class PetService {
 
     @Cacheable(value = "petsByOwner", key = "#ownerId")
     public List<Pet> findByOwnerId(Long ownerId){
-        ownerService.findById(ownerId);
-        return petRepository.findByOwnerId(ownerId);
+        Owner owner = ownerService.findById(ownerId);
+        return petRepository.findByOwnerId(owner.getId());
     }
 }
 

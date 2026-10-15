@@ -161,14 +161,14 @@ public class TreatmentService {
             @CacheEvict(value = "treatmentsByPet", allEntries = true)
     })
     public void deleteById(Long id){
-        findById(id);
-        treatmentRepository.deleteById(id);
+        Treatment treatment = findById(id);
+        treatmentRepository.delete(treatment);
     }
 
     @Cacheable(value = "treatmentsByPet", key = "#petId")
     public List<Treatment> findByPetId(Long petId){
-        petService.findById(petId);
-        return treatmentRepository.findByPetId(petId);
+        Pet pet = petService.findById(petId);
+        return treatmentRepository.findByPetId(pet.getId());
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate){

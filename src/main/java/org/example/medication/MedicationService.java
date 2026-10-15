@@ -40,8 +40,8 @@ public class MedicationService {
 
     @CacheEvict(value = "medications", allEntries = true)
     public void deleteById(Long id){
-        findById(id);
-    medicationRepository.deleteById(id);
+        Medication medication = findById(id);
+        medicationRepository.delete(medication);
     }
 
     @CacheEvict(value = "medications", allEntries = true)
