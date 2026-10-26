@@ -67,7 +67,7 @@ pipeline {
                     $notificationImage = "$env:NOTIFICATION_IMAGE_REPOSITORY`:latest"
 
                     kubectl set image deployment/app `
-                        app=$appImage `
+                        pet-info-health-service=$appImage `
                         --namespace $env:K8S_NAMESPACE
 
                     kubectl set image deployment/notification-service `
