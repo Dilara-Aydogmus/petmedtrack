@@ -39,12 +39,14 @@ pipeline {
 
                         if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_USERNAME)) { throw 'Docker Hub username was not bound' }
                         if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_TOKEN)) { throw 'Docker Hub token was not bound' }
-                        Write-Output "Docker Hub username bound: $env:DOCKERHUB_USERNAME"
-                        Write-Output "Docker Hub token length: $($env:DOCKERHUB_TOKEN.Length)"
+                        $dockerHubUsername = $env:DOCKERHUB_USERNAME.Trim()
+                        $dockerHubToken = $env:DOCKERHUB_TOKEN.Trim()
+                        Write-Output "Docker Hub username bound: $dockerHubUsername"
+                        Write-Output "Docker Hub token length: $($dockerHubToken.Length)"
 
                         $loginInfo = New-Object System.Diagnostics.ProcessStartInfo
                         $loginInfo.FileName = 'docker'
-                        $loginInfo.Arguments = "login --username $env:DOCKERHUB_USERNAME --password-stdin"
+                        $loginInfo.Arguments = "login --username $dockerHubUsername --password-stdin"
                         $loginInfo.UseShellExecute = $false
                         $loginInfo.RedirectStandardInput = $true
                         $loginInfo.RedirectStandardOutput = $true
@@ -52,7 +54,7 @@ pipeline {
                         $loginProcess = New-Object System.Diagnostics.Process
                         $loginProcess.StartInfo = $loginInfo
                         [void]$loginProcess.Start()
-                        $loginProcess.StandardInput.Write($env:DOCKERHUB_TOKEN)
+                        $loginProcess.StandardInput.WriteLine($dockerHubToken)
                         $loginProcess.StandardInput.Close()
                         $loginOutput = $loginProcess.StandardOutput.ReadToEnd()
                         $loginError = $loginProcess.StandardError.ReadToEnd()
