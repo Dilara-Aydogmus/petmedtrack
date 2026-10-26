@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_REPOSITORY = 'dilaraydgms/petmedtrack'
         NOTIFICATION_IMAGE_REPOSITORY = 'dilaraydgms/petmedtrack-notification'
+
         GCP_PROJECT = 'petmedtrack-510515'
         GKE_CLUSTER = 'petmedtrack-cluster'
         GKE_ZONE = 'us-central1-a'
@@ -11,16 +12,31 @@ pipeline {
     }
 
     stages {
-        stage('Build and test') {
+
+        stage('Build') {
             steps {
-                powershell 'mvn -B clean package'
+                powershell '''
+                    mvn -B clean package
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Main application build failed"
+                    }
+                '''
+
                 dir('notification-service') {
-                    powershell 'mvn -B clean package'
+                    powershell '''
+                        mvn -B clean package
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Notification service build failed"
+                        }
+                    '''
                 }
             }
         }
 
-        stage('Build and push Docker images') {
+
+        stage('Docker Build and Push') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -29,88 +45,152 @@ pipeline {
                         passwordVariable: 'DOCKERHUB_TOKEN'
                     )
                 ]) {
+
                     powershell '''
-                        $ErrorActionPreference = 'Stop'
+                        $appImage = "${env:IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
+                        $notificationImage = "${env:NOTIFICATION_IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
 
-                        $appTag = "$env:IMAGE_REPOSITORY`:$env:BUILD_NUMBER"
-                        $appLatest = "$env:IMAGE_REPOSITORY`:latest"
-                        $notificationTag = "$env:NOTIFICATION_IMAGE_REPOSITORY`:$env:BUILD_NUMBER"
-                        $notificationLatest = "$env:NOTIFICATION_IMAGE_REPOSITORY`:latest"
 
-                        if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_USERNAME)) { throw 'Docker Hub username was not bound' }
-                        if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_TOKEN)) { throw 'Docker Hub token was not bound' }
-                        $dockerHubUsername = $env:DOCKERHUB_USERNAME.Trim()
-                        $dockerHubToken = $env:DOCKERHUB_TOKEN.Trim()
-                        Write-Output "Docker Hub username bound: $dockerHubUsername"
-                        Write-Output "Docker Hub token length: $($dockerHubToken.Length)"
+                        Write-Output "Logging into Docker Hub..."
 
-                        $loginInfo = New-Object System.Diagnostics.ProcessStartInfo
-                        $loginInfo.FileName = 'docker'
-                        $loginInfo.Arguments = "login --username $dockerHubUsername --password-stdin"
-                        $loginInfo.UseShellExecute = $false
-                        $loginInfo.RedirectStandardInput = $true
-                        $loginInfo.RedirectStandardOutput = $true
-                        $loginInfo.RedirectStandardError = $true
-                        $loginProcess = New-Object System.Diagnostics.Process
-                        $loginProcess.StartInfo = $loginInfo
-                        [void]$loginProcess.Start()
-                        $loginProcess.StandardInput.WriteLine($dockerHubToken)
-                        $loginProcess.StandardInput.Close()
-                        $loginOutput = $loginProcess.StandardOutput.ReadToEnd()
-                        $loginError = $loginProcess.StandardError.ReadToEnd()
-                        $loginProcess.WaitForExit()
-                        if ($loginProcess.ExitCode -ne 0) { throw "Docker Hub login failed: $loginError" }
-                        Write-Output $loginOutput
+                        $env:DOCKERHUB_TOKEN | docker login `
+                            --username $env:DOCKERHUB_USERNAME `
+                            --password-stdin
 
-                        docker build -t $appTag -t $appLatest .
-                        if ($LASTEXITCODE -ne 0) { throw 'Application image build failed' }
-                        docker build -t $notificationTag -t $notificationLatest ./notification-service
-                        if ($LASTEXITCODE -ne 0) { throw 'Notification image build failed' }
-                        docker push $appTag
-                        if ($LASTEXITCODE -ne 0) { throw 'Application image push failed' }
-                        docker push $appLatest
-                        if ($LASTEXITCODE -ne 0) { throw 'Application latest image push failed' }
-                        docker push $notificationTag
-                        if ($LASTEXITCODE -ne 0) { throw 'Notification image push failed' }
-                        docker push $notificationLatest
-                        if ($LASTEXITCODE -ne 0) { throw 'Notification latest image push failed' }
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Docker Hub login failed"
+                        }
+
+
+                        Write-Output "Building main application image..."
+
+                        docker build `
+                            -t $appImage `
+                            .
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Main application Docker build failed"
+                        }
+
+
+                        Write-Output "Building notification service image..."
+
+                        docker build `
+                            -t $notificationImage `
+                            ./notification-service
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Notification Docker build failed"
+                        }
+
+
+                        Write-Output "Pushing main application image..."
+
+                        docker push $appImage
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Main application Docker push failed"
+                        }
+
+
+                        Write-Output "Pushing notification service image..."
+
+                        docker push $notificationImage
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Notification Docker push failed"
+                        }
+
+
                         docker logout
                     '''
                 }
             }
         }
 
+
         stage('Deploy to GKE') {
             steps {
                 powershell '''
-                    $ErrorActionPreference = 'Stop'
+                    $appImage = "${env:IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
+                    $notificationImage = "${env:NOTIFICATION_IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
+
+
+                    Write-Output "Selecting GCP project..."
 
                     gcloud config set project $env:GCP_PROJECT
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "GCP project configuration failed"
+                    }
+
+
+                    Write-Output "Connecting to GKE cluster..."
 
                     gcloud container clusters get-credentials `
                         $env:GKE_CLUSTER `
                         --zone $env:GKE_ZONE
 
-                    $appImage = "$env:IMAGE_REPOSITORY`:latest"
-                    $notificationImage = "$env:NOTIFICATION_IMAGE_REPOSITORY`:latest"
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "GKE connection failed"
+                    }
+
+
+                    Write-Output "Deploying main application..."
 
                     kubectl set image deployment/app `
                         petmedtrack-app=$appImage `
                         --namespace $env:K8S_NAMESPACE
 
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Main application deployment failed"
+                    }
+
+
+                    Write-Output "Deploying notification service..."
+
                     kubectl set image deployment/notification-service `
                         notification-service=$notificationImage `
                         --namespace $env:K8S_NAMESPACE
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Notification deployment failed"
+                    }
+
+
+                    Write-Output "Waiting for main application rollout..."
 
                     kubectl rollout status deployment/app `
                         --namespace $env:K8S_NAMESPACE `
                         --timeout=180s
 
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Main application rollout failed"
+                    }
+
+
+                    Write-Output "Waiting for notification service rollout..."
+
                     kubectl rollout status deployment/notification-service `
                         --namespace $env:K8S_NAMESPACE `
                         --timeout=180s
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Notification rollout failed"
+                    }
                 '''
             }
+        }
+    }
+
+
+    post {
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
