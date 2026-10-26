@@ -19,6 +19,20 @@ public class CreateUserRequest {
     @NotBlank(message = "Role is required")
     private String role;
 
-    private Long veterinarianId;
+    @NotBlank(message = "First name is required")
+    private String firstName;
+
+    @NotBlank(message = "Last name is required")
+    private String lastName;
+
+    @NotBlank(message = "Email is required")
+    private String email;
+
+    @NotBlank(message = "Phone number is required")
+    private String phoneNumber;
+
+    private String clinicName;
+    private String clinicAddress;
+    private String clinicPhoneNumber;
 
 }

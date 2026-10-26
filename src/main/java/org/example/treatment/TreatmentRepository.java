@@ -33,4 +33,7 @@ public interface TreatmentRepository extends JpaRepository<Treatment, Long> {
 
     Treatment findByIdAndPetOwnerClinicId(Long treatmentId, Long clinicId);
     List<Treatment> findByPetOwnerClinicId(Long clinicId);
+
+    List<Treatment> findByPetOwnerId(Long ownerId);
+    Treatment findByIdAndPetOwnerId(Long treatmentId, Long ownerId);
 }

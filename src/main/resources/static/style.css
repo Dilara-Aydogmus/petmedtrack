@@ -26,7 +26,8 @@ a { color:inherit; text-decoration:none; }
 .profile-mini strong, .profile-mini span { display:block; }
 .profile-mini strong { font-size:12px; font-weight:600; }
 .profile-mini span { margin-top:2px; color:#AD9BA3; font-size:10px; }
-.more-button { margin-left:auto; color:#AD9BA3; background:none; border:0; letter-spacing:2px; }
+.logout-button { margin-left:auto; padding:7px 10px; color:#fff; background:var(--plum); border:1px solid var(--plum); border-radius:8px; font-size:10px; font-weight:600; cursor:pointer; }
+.logout-button:hover { color:#fff; background:var(--plum); }
 .main-content { width:calc(100% - 252px); min-width:0; margin-left:252px; padding:0 46px 48px; }
 .topbar { display:flex; align-items:center; justify-content:space-between; height:88px; border-bottom:1px solid var(--line); }
 .breadcrumb { color:var(--muted); font-size:12px; }.breadcrumb span { color:var(--black); font-weight:600; }.breadcrumb b { margin:0 10px; color:var(--soft-pink); }
@@ -242,23 +243,192 @@ a { color:inherit; text-decoration:none; }
     }
 }
 
+/* Small UX refinements: keep the existing palette and improve spacing and hierarchy. */
+.main-content {
+    max-width: 1480px;
+    box-sizing: border-box;
+}
+
+.page-hidden {
+    display: none !important;
+}
+
+#owner-form.page-visible,
+#clinic-form.page-visible,
+#veterinarian-form.page-visible,
+#pet-form.page-visible,
+#medication-form.page-visible,
+#treatment-form.page-visible,
+#disease-form.page-visible,
+#treatment-plan-form.page-visible,
+#treatment-edit-form.page-visible {
+    display: block !important;
+}
+
+.panel,
+.stat-card,
+.quote-card,
+.quick-actions a {
+    transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+}
+
+.panel:hover,
+.stat-card:hover {
+    border-color: rgba(33, 27, 32, .12);
+    box-shadow: 0 10px 24px rgba(33, 27, 32, .06);
+}
+
+.panel-heading {
+    gap: 18px;
+}
+
+.panel-heading > a,
+.breadcrumb a {
+    white-space: nowrap;
+}
+
+table tbody tr {
+    transition: background-color .15s ease;
+}
+
+table tbody tr:hover {
+    background: rgba(33, 27, 32, .025);
+}
+
+.table-wrap {
+    scrollbar-width: thin;
+}
+
+input,
+select,
+textarea,
+button {
+    box-sizing: border-box;
+}
+
+.primary-button,
+.secondary-button,
+.icon-button,
+.mobile-menu,
+.text-button {
+    transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+    transform: translateY(-1px);
+}
+
+.primary-button:active,
+.secondary-button:active {
+    transform: translateY(0);
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.icon-button:focus-visible,
+.mobile-menu:focus-visible,
+.text-button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(183, 129, 151, .28);
+    outline-offset: 2px;
+}
+
+#create-owner-form,
+#create-clinic-form,
+#create-veterinarian-form,
+#create-pet-form,
+#create-treatment-form,
+#create-disease-form,
+#create-treatment-plan-form,
+#update-treatment-form {
+    align-items: start;
+}
+
+#create-owner-form input,
+#create-owner-form select,
+#create-clinic-form input,
+#create-veterinarian-form input,
+#create-veterinarian-form select,
+#create-pet-form input,
+#create-treatment-form input,
+#create-disease-form input,
+#create-treatment-plan-form input,
+#update-treatment-form input,
+#update-treatment-form select {
+    min-width: 0;
+    width: 100%;
+}
+
+.form-actions {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1050px) {
+    .main-content {
+        max-width: none;
+    }
+}
+
+@media (max-width: 700px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .panel-heading {
+        align-items: flex-start;
+    }
+
+    .panel-heading h2 {
+        font-size: 20px;
+    }
+
+    .panel-heading > a {
+        margin-top: 7px;
+        font-size: 10px;
+    }
+
+    .calendar-date strong {
+        font-size: 38px;
+    }
+
+    .table-wrap {
+        margin-right: -4px;
+        padding-bottom: 4px;
+    }
+
+    .form-actions .primary-button,
+    .form-actions .secondary-button {
+        width: 100%;
+    }
+}
+
 #login-screen {
     position: fixed;
     z-index: 20;
     inset: 0;
     display: grid;
-    place-items: center;
+    place-items: start center;
+    overflow-y: auto;
     padding: 24px;
     background: var(--black);
 }
 
 .login-card {
     width: min(100%, 390px);
+    margin: 24px auto;
     padding: 38px;
     background: var(--paper);
     border: 1px solid rgba(197, 141, 166, .35);
     border-radius: 20px;
     box-shadow: 0 24px 70px rgba(33, 27, 32, .35);
+}
+
+#login-screen:has(#register-view:not(.hidden-form)) .login-card {
+    width: min(100%, 720px);
 }
 
 .login-mark {
@@ -338,6 +508,10 @@ a { color:inherit; text-decoration:none; }
     display: none !important;
 }
 
+.role-hidden {
+    display: none !important;
+}
+
 .register-form {
     display: grid;
     gap: 8px;
@@ -370,6 +544,150 @@ a { color:inherit; text-decoration:none; }
     margin-top: 17px;
 }
 
+.auth-view h1 {
+    margin-bottom: 0;
+}
+
+.auth-switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 24px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.auth-switch .text-button {
+    margin: 0;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0 24px;
+    padding: 0;
+    color: var(--muted);
+    background: transparent;
+    border: 0;
+    font-size: 11px;
+}
+
+.back-button:hover {
+    color: var(--plum);
+}
+
+#register-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 18px;
+}
+
+#register-form label {
+    margin-top: 0;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#register-form input,
+#register-form select {
+    width: 100%;
+    padding: 13px;
+    color: var(--black);
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    outline: none;
+    font: inherit;
+}
+
+#register-form input:focus,
+#register-form select:focus {
+    border-color: var(--dusty-pink);
+}
+
+#register-form button.primary-button {
+    width: 100%;
+    margin-top: 17px;
+    grid-column: 1 / -1;
+}
+
+#register-form .login-message,
+#register-clinic-fields,
+#register-form-title,
+#register-user-clinic-field {
+    grid-column: 1 / -1;
+}
+
+#register-user-clinic-field {
+    display: grid;
+    gap: 8px;
+}
+
+.register-choice-message {
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+}
+
+#register-clinic-fields:not(.hidden-form) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+#register-clinic-fields .register-section-title {
+    grid-column: 1 / -1;
+}
+
+.account-type-choice {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.account-type {
+    display: grid;
+    gap: 3px;
+    padding: 12px 13px;
+    color: var(--black);
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    text-align: left;
+}
+
+.account-type strong {
+    font-size: 12px;
+}
+
+.account-type small {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.account-type.active {
+    border-color: var(--dusty-pink);
+    box-shadow: 0 0 0 2px rgba(183, 129, 151, .14);
+}
+
+.account-type:hover {
+    border-color: var(--dusty-pink);
+}
+
+.register-section-title {
+    margin: 14px 0 0;
+    padding-top: 14px;
+    color: var(--plum);
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    font-weight: 700;
+}
+
 .empty-state {
     padding: 25px 10px;
     color: var(--muted);
@@ -400,4 +718,22 @@ a { color:inherit; text-decoration:none; }
 .table-action:hover {
     color: var(--paper);
     background: var(--dusty-pink);
+}
+@media (max-width: 560px) {
+    #login-screen:has(#register-view:not(.hidden-form)) .login-card {
+        width: 100%;
+        padding: 26px 20px;
+    }
+
+    .account-type-choice,
+    #register-form,
+    #register-clinic-fields:not(.hidden-form) {
+        grid-template-columns: 1fr;
+    }
+
+    #register-form .login-message,
+    #register-clinic-fields,
+    #register-clinic-fields .register-section-title {
+        grid-column: auto;
+    }
 }

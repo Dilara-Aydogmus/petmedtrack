@@ -1,4 +1,5 @@
 package org.example.pet;
+import org.example.auth.User;
 import org.example.common.ResourceNotFoundException;
 import org.example.owner.Owner;
 import org.example.owner.OwnerService;
@@ -29,18 +30,31 @@ public class PetService {
 
     @Cacheable(value = "pets")
     public List<Pet> findAll() {
+        User currentUser = currentUserService.getCurrentUser();
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Long ownerId = currentUserService.getCurrentOwner().getId();
+            return petRepository.findByOwnerId(ownerId);
+        }
         Long clinicId = currentUserService.getCurrentClinicId();
         return petRepository.findByOwnerClinicId(clinicId);
     }
 
     @Cacheable(value = "pets", key = "#id")
     public Pet findById(Long id) {
-    Long clinicId = currentUserService.getCurrentClinicId();
-    Pet pet = petRepository.findPetByIdAndOwnerClinicId(id, clinicId);
-    if(pet == null){
-        throw new ResourceNotFoundException("Pet not found in current clinic: " + id);
-    }
+        User currentUser = currentUserService.getCurrentUser();
+        Pet pet;
 
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Long ownerId = currentUserService.getCurrentOwner().getId();
+            pet = petRepository.findPetByIdAndOwnerId(id, ownerId);
+        } else{
+            Long clinicId = currentUserService.getCurrentClinicId();
+            pet = petRepository.findPetByIdAndOwnerClinicId(id, clinicId);
+        }
+
+        if(pet == null){
+            throw new ResourceNotFoundException("Pet not found in current access scope:"  + id);
+        }
     return pet;
     }
 
@@ -49,7 +63,7 @@ public class PetService {
             @CacheEvict(value = "petsByOwner", allEntries = true)
     })
     public Pet create(CreatePetRequest request){
-        Owner owner = ownerService.findById(request.getOwnerId());
+        Owner owner = ownerService.findByName(request.getOwnerFirstName(), request.getOwnerLastName());
         Pet pet = new Pet(
                 request.getName(),
                 request.getSpecies(),
@@ -61,8 +75,7 @@ public class PetService {
                 request.isNeutered(),
                 owner
         );
-        Pet savedPet = save(pet);
-        return savedPet;
+        return save(pet);
     }
 
 
@@ -78,7 +91,7 @@ public class PetService {
 
     public Pet update(Long id, CreatePetRequest request) {
         Pet pet = findById(id);
-        Owner owner = ownerService.findById(request.getOwnerId());
+        Owner owner = ownerService.findByName(request.getOwnerFirstName(), request.getOwnerLastName());
         pet.setOwner(owner);
         pet.setName(request.getName());
         pet.setSpecies(request.getSpecies());
@@ -89,8 +102,7 @@ public class PetService {
         pet.setHeight(request.getHeight());
         pet.setNeutered(request.isNeutered());
 
-        Pet updatedPet = save(pet);
-        return updatedPet;
+        return save(pet);
     }
 
 

@@ -1,7 +1,6 @@
 package org.example.pet.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,6 +30,9 @@ public class CreatePetRequest {
 
     private boolean neutered;
 
-    @NotNull(message = "Owner id is required")
-    private Long ownerId;
+   @NotBlank(message = "Owner first name is required")
+    private String ownerFirstName;
+
+   @NotBlank(message = "Owner last name is required")
+    private String ownerLastName;
 }

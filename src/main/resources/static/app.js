@@ -1,4 +1,5 @@
 ﻿let auth = sessionStorage.getItem("petmedtrack-auth");
+let currentUser = null;
 let formHandlersAttached = false;
 let dashboardData = {
     owners: [], pets: [], medications: [], diseases: [], treatments: [], clinics: [], veterinarians: []
@@ -23,17 +24,17 @@ async function request(url, options = {}, token = auth) {
         if (token === auth) {
             logout();
         }
-        throw new Error("KullanÄ±cÄ± adÄ± veya ÅŸifre hatalÄ±.");
+        throw new Error("Kullanıcı adı veya şifre hatalı.");
     }
 
     if (!response.ok) {
-        let message = "Ä°ÅŸlem tamamlanamadÄ±.";
+        let message = "İşlem tamamlanamadı.";
         try {
             message = await response.text();
         } catch (ignored) {
-            // Sunucu cevap vermediyse varsayÄ±lan mesajÄ± kullan.
+            // Sunucu cevap vermediyse varsayılan mesajı kullan.
         }
-        throw new Error(message || "Ä°ÅŸlem tamamlanamadÄ±.");
+        throw new Error(message || "İşlem tamamlanamadı.");
     }
 
     if (response.status === 204) {
@@ -52,48 +53,109 @@ function showLogin() {
     loginScreen.id = "login-screen";
     loginScreen.innerHTML = `
         <div class="login-card">
-            <div class="login-mark">âœ¦</div>
+            <div class="login-mark">✦</div>
             <p class="eyebrow">PETMEDTRACK</p>
-            <h1>HoÅŸ geldin</h1>
-            <p class="login-description">KliniÄŸinin bakÄ±m paneline giriÅŸ yap.</p>
-            <form id="login-form">
-                <label for="login-username">KullanÄ±cÄ± adÄ±</label>
-                <input id="login-username" autocomplete="username" required>
-                <label for="login-password">Åžifre</label>
-                <input id="login-password" type="password" autocomplete="current-password" required>
-                <button class="primary-button" type="submit">GiriÅŸ yap</button>
-                <p id="login-message" class="login-message"></p>
-            </form>
-            <button id="show-register" class="text-button" type="button">Yeni kullanıcı oluştur</button>
-            <form id="register-form" class="register-form hidden-form">
-                <label for="register-username">Yeni kullanıcı adı</label>
-                <input id="register-username" autocomplete="username" required>
-                <label for="register-password">Şifre</label>
-                <input id="register-password" type="password" autocomplete="new-password" required>
-                <label for="register-role">Rol</label>
-                <select id="register-role">
-                    <option value="USER">Kullanıcı</option>
-                    <option value="VET">Veteriner</option>
-                </select>
-                <div id="register-veterinarian-field" class="hidden-form">
-                    <label for="register-veterinarian-id">Veteriner ID</label>
-                    <input id="register-veterinarian-id" type="number" min="1">
+            <div id="login-view" class="auth-view">
+                <h1>Hoş geldin</h1>
+                <p class="login-description">Kliniğinin bakım paneline güvenle giriş yap.</p>
+                <form id="login-form">
+                    <label for="login-username">Kullanıcı adı</label>
+                    <input id="login-username" autocomplete="username" required>
+                    <label for="login-password">Şifre</label>
+                    <input id="login-password" type="password" autocomplete="current-password" required>
+                    <button class="primary-button" type="submit">Giriş yap</button>
+                    <p id="login-message" class="login-message"></p>
+                </form>
+                <div class="auth-switch">
+                    <span>Hesabın yok mu?</span>
+                    <button id="show-register" class="text-button" type="button">Yeni kullanıcı oluştur</button>
                 </div>
-                <button class="primary-button" type="submit">Kayıt ol</button>
-                <p id="register-message" class="login-message"></p>
-            </form>
+            </div>
+            <div id="register-view" class="auth-view hidden-form">
+                <button id="show-login" class="back-button" type="button">← Giriş ekranına dön</button>
+                <h1>Hesap oluştur</h1>
+                <p class="login-description">PetMedTrack’i kullanmak için bilgilerini gir.</p>
+                <div class="account-type-choice" aria-label="Hesap türü">
+                    <button type="button" class="account-type" data-role="USER">
+                        <strong>Normal kullanıcı</strong>
+                        <small>Hayvan sahibi olarak kayıt ol</small>
+                    </button>
+                    <button type="button" class="account-type" data-role="VET">
+                        <strong>Veteriner hesabı</strong>
+                        <small>Klinik ve veteriner bilgilerini ekle</small>
+                    </button>
+                </div>
+                <p id="register-choice-message" class="register-choice-message">Devam etmek için hesap türünü seç.</p>
+                <form id="register-form" class="hidden-form">
+                    <input id="register-role" type="hidden" value="USER">
+                    <p id="register-form-title" class="register-section-title">Kullanıcı bilgileri</p>
+                    <label for="register-username">Kullanıcı adı</label>
+                    <input id="register-username" autocomplete="username" required>
+                    <label for="register-password">Şifre</label>
+                    <input id="register-password" type="password" autocomplete="new-password" required>
+                    <label for="register-first-name">Ad</label>
+                    <input id="register-first-name" autocomplete="given-name" required>
+                    <label for="register-last-name">Soyad</label>
+                    <input id="register-last-name" autocomplete="family-name" required>
+                    <label for="register-email">E-posta</label>
+                    <input id="register-email" type="email" autocomplete="email" required>
+                    <label for="register-phone-number">Telefon</label>
+                    <input id="register-phone-number" autocomplete="tel" required>
+                    <div id="register-user-clinic-field" class="register-role-field">
+                        <label for="register-user-clinic-name">Bağlanılacak klinik adı</label>
+                        <input id="register-user-clinic-name" autocomplete="organization" required>
+                    </div>
+                    <div id="register-clinic-fields" class="hidden-form">
+                        <p class="register-section-title">Klinik bilgileri</p>
+                        <label for="register-clinic-name">Klinik adı</label>
+                        <input id="register-clinic-name">
+                        <label for="register-clinic-address">Klinik adresi</label>
+                        <input id="register-clinic-address">
+                        <label for="register-clinic-phone-number">Klinik telefonu</label>
+                        <input id="register-clinic-phone-number">
+                    </div>
+                    <button class="primary-button" type="submit">Hesap oluştur</button>
+                    <p id="register-message" class="login-message"></p>
+                </form>
+            </div>
         </div>
     `;
 
     document.body.appendChild(loginScreen);
 
     document.getElementById("show-register").addEventListener("click", () => {
-        document.getElementById("register-form").classList.toggle("hidden-form");
+        document.getElementById("login-view").classList.add("hidden-form");
+        document.getElementById("register-view").classList.remove("hidden-form");
+        document.getElementById("register-username").focus();
     });
 
-    document.getElementById("register-role").addEventListener("change", event => {
-        document.getElementById("register-veterinarian-field")
-            .classList.toggle("hidden-form", event.target.value !== "VET");
+    document.getElementById("show-login").addEventListener("click", () => {
+        document.getElementById("register-view").classList.add("hidden-form");
+        document.getElementById("login-view").classList.remove("hidden-form");
+        document.getElementById("login-username").focus();
+    });
+
+    document.querySelectorAll(".account-type").forEach(button => {
+        button.addEventListener("click", event => {
+            const role = event.currentTarget.dataset.role;
+            document.getElementById("register-role").value = role;
+            document.querySelectorAll(".account-type").forEach(item => {
+                item.classList.toggle("active", item === event.currentTarget);
+            });
+            document.getElementById("register-form").classList.remove("hidden-form");
+            document.getElementById("register-choice-message").classList.add("hidden-form");
+            document.getElementById("register-form-title").textContent = role === "VET"
+                ? "Veteriner ve klinik bilgileri"
+                : "Kullanıcı bilgileri";
+            document.getElementById("register-clinic-fields")
+                .classList.toggle("hidden-form", role !== "VET");
+            document.getElementById("register-user-clinic-field")
+                .classList.toggle("hidden-form", role === "VET");
+            document.getElementById("register-user-clinic-name").required = role === "USER";
+            document.getElementById("register-clinic-name").required = role === "VET";
+            document.getElementById("register-clinic-phone-number").required = role === "VET";
+            document.getElementById("register-form").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
     });
 
     document.getElementById("register-form").addEventListener("submit", async event => {
@@ -105,9 +167,15 @@ function showLogin() {
             username: document.getElementById("register-username").value.trim(),
             password: document.getElementById("register-password").value,
             role: role,
-            veterinarianId: role === "VET"
-                ? Number(document.getElementById("register-veterinarian-id").value)
-                : null
+            firstName: document.getElementById("register-first-name").value.trim(),
+            lastName: document.getElementById("register-last-name").value.trim(),
+            email: document.getElementById("register-email").value.trim(),
+            phoneNumber: document.getElementById("register-phone-number").value.trim(),
+            clinicName: role === "VET"
+                ? document.getElementById("register-clinic-name").value.trim()
+                : document.getElementById("register-user-clinic-name").value.trim(),
+            clinicAddress: role === "VET" ? document.getElementById("register-clinic-address").value.trim() : null,
+            clinicPhoneNumber: role === "VET" ? document.getElementById("register-clinic-phone-number").value.trim() : null
         };
 
         try {
@@ -124,6 +192,11 @@ function showLogin() {
             message.textContent = "Kayıt başarılı. Şimdi giriş yapabilirsiniz.";
             document.getElementById("login-username").value = requestBody.username;
             document.getElementById("register-form").reset();
+            document.getElementById("register-form").classList.add("hidden-form");
+            document.getElementById("register-choice-message").classList.remove("hidden-form");
+            document.querySelectorAll(".account-type").forEach(item => item.classList.remove("active"));
+            document.getElementById("register-view").classList.add("hidden-form");
+            document.getElementById("login-view").classList.remove("hidden-form");
         } catch (error) {
             message.textContent = error.message;
         }
@@ -149,7 +222,7 @@ function showLogin() {
             });
 
             if (!response.ok) {
-                throw new Error("KullanÄ±cÄ± adÄ± veya ÅŸifre hatalÄ±.");
+                throw new Error("Kullanıcı adı veya şifre hatalı.");
             }
 
             auth = await response.text();
@@ -169,6 +242,100 @@ function logout() {
     showLogin();
 }
 
+const pageDefinitions = {
+    dashboard: {
+        label: "Genel Bakış",
+        selectors: [".welcome-row", ".stats-grid", "#search", ".content-grid", ".bottom-grid"]
+    },
+    pets: {
+        label: "Dostlarım",
+        selectors: ["#pets-view", "#pet-form"]
+    },
+    treatments: {
+        label: "Tedaviler",
+        selectors: [".content-grid", "#treatment-form", "#treatment-plan-form", "#treatment-edit-form"]
+    },
+    medications: {
+        label: "İlaçlar",
+        selectors: ["#medications-view", "#medication-form"]
+    },
+    owners: {
+        label: "Sahipler",
+        selectors: ["#owners-view", "#owner-form", "#clinic-form"]
+    }
+};
+
+function pageNameFromHash(hash) {
+    const value = (hash || "").replace("#", "");
+    if (pageDefinitions[value]) {
+        return value;
+    }
+
+    const targetToPage = {
+        "pet-form": "pets",
+        "new-medication": "medications",
+        "new-treatment": "treatments",
+        "new-treatment-plan": "treatments",
+        "all-treatments": "treatments",
+        "edit-treatment-anchor": "treatments",
+        "owner-form": "owners"
+    };
+    return targetToPage[value] || "dashboard";
+}
+
+function showPage(pageName, updateUrl = true) {
+    const page = pageDefinitions[pageName] || pageDefinitions.dashboard;
+    const mainContent = document.querySelector(".main-content");
+    if (!mainContent) {
+        return;
+    }
+
+    mainContent.querySelectorAll(":scope > section").forEach(section => {
+        section.classList.add("page-hidden");
+        section.classList.remove("page-visible");
+    });
+
+    page.selectors.forEach(selector => {
+        mainContent.querySelectorAll(selector).forEach(element => {
+            element.classList.remove("page-hidden");
+            element.classList.add("page-visible");
+        });
+    });
+
+    document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.toggle("active", item.getAttribute("href") === `#${pageName}`);
+    });
+
+    const breadcrumb = document.querySelector(".breadcrumb");
+    if (breadcrumb) {
+        breadcrumb.innerHTML = `<span>PetMedTrack</span><b>/</b> ${page.label}`;
+    }
+
+    if (updateUrl && window.location.hash !== `#${pageName}`) {
+        history.pushState(null, "", `#${pageName}`);
+    }
+}
+
+function setupPageNavigation() {
+    document.querySelectorAll(".nav-item, .quick-actions a, .panel-heading a").forEach(link => {
+        link.addEventListener("click", event => {
+            const target = link.getAttribute("href");
+            if (!target || !target.startsWith("#")) {
+                return;
+            }
+
+            event.preventDefault();
+            showPage(pageNameFromHash(target));
+        });
+    });
+
+    window.addEventListener("popstate", () => {
+        showPage(pageNameFromHash(window.location.hash), false);
+    });
+
+    showPage(pageNameFromHash(window.location.hash), false);
+}
+
 function fillClinicSelect(selectId, clinics) {
     const select = document.getElementById(selectId);
     if (!select) {
@@ -176,7 +343,7 @@ function fillClinicSelect(selectId, clinics) {
     }
 
     const selectedValue = select.value;
-    select.innerHTML = '<option value="">Klinik seÃ§in</option>';
+    select.innerHTML = '<option value="">Klinik seçin</option>';
 
     clinics.forEach(clinic => {
         const option = document.createElement("option");
@@ -197,9 +364,11 @@ async function loadReferenceData() {
 }
 
 async function loadCurrentUser() {
-    const currentUser = await request("/api/auth/me");
-    const userName = currentUser.veterinarianName || currentUser.username || "KullanÄ±cÄ±";
-    const clinicName = currentUser.clinicName || "Klinik bilgisi yok";
+    currentUser = await request("/api/auth/me");
+    const userName = currentUser.veterinarianName || currentUser.username || "Kullanıcı";
+    const clinicName = currentUser.role === "VET" && currentUser.clinicName
+        ? currentUser.clinicName
+        : "Klinik bilgisi yok";
     const initials = userName
         .split(" ")
         .filter(Boolean)
@@ -218,13 +387,40 @@ function actionButton(action, id, label) {
     return `<button type="button" class="table-action" data-action="${action}" data-id="${id}">${label}</button>`;
 }
 
+function applyRoleBasedInterface() {
+    const canManage = currentUser?.role === "VET" || currentUser?.role === "ADMIN";
+    const managementOnlyElements = [
+        "#open-owner-form",
+        ".quick-panel",
+        "#owner-form",
+        "#veterinarian-form",
+        "#pet-form",
+        "#medication-form",
+        "#treatment-form",
+        "#disease-form",
+        "#treatment-plan-form",
+        "#treatment-edit-form"
+    ];
+
+    managementOnlyElements.forEach(selector => {
+        document.querySelectorAll(selector).forEach(element => {
+            element.classList.toggle("role-hidden", !canManage);
+        });
+    });
+
+    const intro = document.querySelector(".welcome-row .intro");
+    if (intro && !canManage) {
+        intro.textContent = "Kliniğin veteriner ekibi tarafından eklenen kayıtları görüntülüyorsun.";
+    }
+}
+
 function createTreatmentMedicationRow(medication = {}) {
     const row = document.createElement("div");
     row.className = "treatment-medication-row edit-treatment-medication-row";
     row.innerHTML = `
-        <input class="edit-medication-id" type="number" placeholder="Ä°laÃ§ ID" value="${medication.medication?.id || medication.medicationId || ""}" required>
+        <input class="edit-medication-id" type="number" placeholder="İlaç ID" value="${medication.medication?.id || medication.medicationId || ""}" required>
         <input class="edit-dosage" placeholder="Doz" value="${escapeHtml(medication.dosage || "")}" required>
-        <input class="edit-frequency" placeholder="SÄ±klÄ±k" value="${escapeHtml(medication.frequency || "")}" required>
+        <input class="edit-frequency" placeholder="Sıklık" value="${escapeHtml(medication.frequency || "")}" required>
         <button type="button" class="table-action remove-edit-medication">Sil</button>
     `;
     return row;
@@ -287,7 +483,7 @@ function renderCalendar(treatments) {
         .slice(0, 5);
 
     if (upcomingTreatments.length === 0) {
-        reminders.innerHTML = '<p class="empty-state">YaklaÅŸan kontrol yok.</p>';
+        reminders.innerHTML = '<p class="empty-state">Yaklaşan kontrol yok.</p>';
         return;
     }
 
@@ -307,8 +503,8 @@ function renderCalendar(treatments) {
             <div class="calendar-line">
                 <span class="time">${dateText}<br>${time}</span>
                 <div class="appointment ${appointmentClass}">
-                    <strong>${escapeHtml(petName)} kontrolÃ¼</strong>
-                    <span>Tedavi kontrolÃ¼</span>
+                    <strong>${escapeHtml(petName)} kontrolü</strong>
+                    <span>Tedavi kontrolü</span>
                 </div>
             </div>
         `;
@@ -316,6 +512,7 @@ function renderCalendar(treatments) {
 }
 
 function renderManagementTables(owners, pets, medications, clinics, veterinarians) {
+    const canManage = currentUser?.role === "VET" || currentUser?.role === "ADMIN";
     const ownersBody = document.getElementById("owners-body");
     if (ownersBody) {
         ownersBody.innerHTML = owners.map(owner => `
@@ -325,10 +522,10 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
                 <td>${escapeHtml(owner.phoneNumber)}</td>
                 <td>${escapeHtml(owner.clinic?.name || "-")}</td>
                 <td>${owner.active ? "Aktif" : "Pasif"}</td>
-                <td>${actionButton("edit-owner", owner.id, "DÃ¼zenle")}
-                    ${owner.active ? actionButton("deactivate-owner", owner.id, "PasifleÅŸtir") : actionButton("activate-owner", owner.id, "AktifleÅŸtir")}</td>
+                <td>${canManage ? `${actionButton("edit-owner", owner.id, "Düzenle")}
+                    ${owner.active ? actionButton("deactivate-owner", owner.id, "Pasifleştir") : actionButton("activate-owner", owner.id, "Aktifleştir")}` : "Görüntüleme"}</td>
             </tr>
-        `).join("") || `<tr><td colspan="6" class="empty-state">KayÄ±t yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="6" class="empty-state">Kayıt yok.</td></tr>`;
     }
 
     const petsBody = document.getElementById("pets-body");
@@ -337,14 +534,14 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
             <tr>
                 <td>${escapeHtml(pet.name)}</td>
                 <td>${escapeHtml(pet.species)} / ${escapeHtml(pet.breed || "-")}</td>
-                <td>${pet.ageYears ?? 0} yÄ±l ${pet.ageMonths ?? 0} ay</td>
+                <td>${pet.ageYears ?? 0} yıl ${pet.ageMonths ?? 0} ay</td>
                 <td>${pet.weight ?? "-"} kg</td>
                 <td>${pet.height ?? "-"} cm</td>
-                <td>${pet.neutered ? "Evet" : "HayÄ±r"}</td>
+                <td>${pet.neutered ? "Evet" : "Hayır"}</td>
                 <td>${escapeHtml(pet.owner?.firstName || "-")} ${escapeHtml(pet.owner?.lastName || "")}</td>
-                <td>${actionButton("edit-pet", pet.id, "DÃ¼zenle")} ${actionButton("delete-pet", pet.id, "Sil")}</td>
+                <td>${canManage ? `${actionButton("edit-pet", pet.id, "Düzenle")} ${actionButton("delete-pet", pet.id, "Sil")}` : "Görüntüleme"}</td>
             </tr>
-        `).join("") || `<tr><td colspan="8" class="empty-state">KayÄ±t yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="8" class="empty-state">Kayıt yok.</td></tr>`;
     }
 
     const medicationsBody = document.getElementById("medications-body");
@@ -353,9 +550,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
             <tr>
                 <td>${escapeHtml(medication.name)}</td>
                 <td>${escapeHtml(medication.createdAt || "-")}</td>
-                <td>${actionButton("edit-medication", medication.id, "DÃ¼zenle")} ${actionButton("delete-medication", medication.id, "Sil")}</td>
+                <td>${canManage ? `${actionButton("edit-medication", medication.id, "Düzenle")} ${actionButton("delete-medication", medication.id, "Sil")}` : "Görüntüleme"}</td>
             </tr>
-        `).join("") || `<tr><td colspan="3" class="empty-state">KayÄ±t yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="3" class="empty-state">Kayıt yok.</td></tr>`;
     }
 
     const diseasesBody = document.getElementById("diseases-body");
@@ -363,9 +560,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
         diseasesBody.innerHTML = (dashboardData.diseases || []).map(disease => `
             <tr>
                 <td>${escapeHtml(disease.name)}</td>
-                <td>${actionButton("edit-disease", disease.id, "DÃ¼zenle")} ${actionButton("delete-disease", disease.id, "Sil")}</td>
+                <td>${actionButton("edit-disease", disease.id, "Düzenle")} ${actionButton("delete-disease", disease.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="2" class="empty-state">KayÄ±t yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="2" class="empty-state">Kayıt yok.</td></tr>`;
     }
 
     const clinicsBody = document.getElementById("clinics-body");
@@ -375,9 +572,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
                 <td>${escapeHtml(clinic.name)}</td>
                 <td>${escapeHtml(clinic.address || "-")}</td>
                 <td>${escapeHtml(clinic.phoneNumber)}</td>
-                <td>${actionButton("edit-clinic", clinic.id, "DÃ¼zenle")} ${actionButton("delete-clinic", clinic.id, "Sil")}</td>
+                <td>${actionButton("edit-clinic", clinic.id, "Düzenle")} ${actionButton("delete-clinic", clinic.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="4" class="empty-state">KayÄ±t yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="4" class="empty-state">Kayıt yok.</td></tr>`;
     }
 
     const veterinariansBody = document.getElementById("veterinarians-body");
@@ -387,9 +584,9 @@ function renderManagementTables(owners, pets, medications, clinics, veterinarian
                 <td>${escapeHtml(veterinarian.firstName)} ${escapeHtml(veterinarian.lastName)}</td>
                 <td>${escapeHtml(veterinarian.email)}</td>
                 <td>${escapeHtml(veterinarian.clinic?.name || "-")}</td>
-                <td>${actionButton("edit-veterinarian", veterinarian.id, "DÃ¼zenle")} ${actionButton("delete-veterinarian", veterinarian.id, "Sil")}</td>
+                <td>${actionButton("edit-veterinarian", veterinarian.id, "Düzenle")} ${actionButton("delete-veterinarian", veterinarian.id, "Sil")}</td>
             </tr>
-        `).join("") || `<tr><td colspan="4" class="empty-state">KayÄ±t yok.</td></tr>`;
+        `).join("") || `<tr><td colspan="4" class="empty-state">Kayıt yok.</td></tr>`;
     }
 }
 
@@ -411,8 +608,8 @@ async function updateOwner(owner) {
 }
 
 async function updatePet(pet) {
-    const name = prompt("Hayvan adÄ±", pet.name);
-    const species = prompt("TÃ¼r", pet.species);
+    const name = prompt("Hayvan adı", pet.name);
+    const species = prompt("Tür", pet.species);
     const breed = prompt("Irk", pet.breed || "");
     if (!name || !species) return;
 
@@ -432,7 +629,7 @@ async function updatePet(pet) {
 }
 
 async function updateMedication(medication) {
-    const name = prompt("Ä°laÃ§ adÄ±", medication.name);
+    const name = prompt("İlaç adı", medication.name);
     if (!name) return;
 
     await request(`/api/medications/${medication.id}`, {
@@ -443,7 +640,7 @@ async function updateMedication(medication) {
 }
 
 async function updateDisease(disease) {
-    const name = prompt("HastalÄ±k adÄ±", disease.name);
+    const name = prompt("Hastalık adı", disease.name);
     if (!name) return;
 
     await request(`/api/diseases/${disease.id}`, {
@@ -454,7 +651,7 @@ async function updateDisease(disease) {
 }
 
 async function updateClinic(clinic) {
-    const name = prompt("Klinik adÄ±", clinic.name);
+    const name = prompt("Klinik adı", clinic.name);
     const address = prompt("Adres", clinic.address || "");
     const phoneNumber = prompt("Telefon", clinic.phoneNumber);
     if (!name || !phoneNumber) return;
@@ -509,7 +706,7 @@ async function handleManagementAction(action, id, data) {
             "delete-disease": "diseases",
             "delete-clinic": "clinics", "delete-veterinarian": "veterinarians"
         }[action];
-        if (confirm("Bu kaydÄ± silmek istediÄŸinize emin misiniz?")) {
+        if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
             await request(`/api/${endpoint}/${id}`, { method: "DELETE" });
         }
     }
@@ -554,14 +751,14 @@ async function loadDashboard() {
 
     if (treatments.length === 0) {
         treatmentsBody.innerHTML = `
-            <tr><td colspan="4" class="empty-state">HenÃ¼z tedavi kaydÄ± yok.</td></tr>
+            <tr><td colspan="4" class="empty-state">Henüz tedavi kaydı yok.</td></tr>
         `;
         return;
     }
 
     treatments.forEach(treatment => {
         const isActive = !treatment.endDate || new Date(treatment.endDate) >= today;
-        const statusText = isActive ? "Aktif" : "TamamlandÄ±";
+        const statusText = isActive ? "Aktif" : "Tamamlandı";
         const statusClass = isActive ? "active-status" : "completed-status";
         const petName = treatment.pet?.name || "Bilinmeyen hasta";
         const species = treatment.pet?.species || "-";
@@ -571,9 +768,15 @@ async function loadDashboard() {
             : medications.map(item => item.medication?.name || "-").join(", ");
         const dosage = medications.length === 0
             ? "-"
-            : medications.map(item => `${item.dosage} Â· ${item.frequency}`).join(", ");
+            : medications.map(item => `${item.dosage} · ${item.frequency}`).join(", ");
 
         const row = document.createElement("tr");
+        const treatmentActions = currentUser?.role === "VET" || currentUser?.role === "ADMIN"
+            ? `${actionButton("edit-treatment", treatment.id, "Düzenle")}
+                ${isActive ? actionButton("complete-treatment", treatment.id, "Bitir") : actionButton("reactivate-treatment", treatment.id, "Aktifleştir")}
+                ${actionButton("cancel-treatment", treatment.id, "İptal")}
+                ${actionButton("delete-treatment", treatment.id, "Sil")}`
+            : "Görüntüleme";
         row.innerHTML = `
             <td>
                 <div class="patient">
@@ -585,10 +788,7 @@ async function loadDashboard() {
             <td>${escapeHtml(dosage)}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
             <td>
-                ${actionButton("edit-treatment", treatment.id, "DÃ¼zenle")}
-                ${isActive ? actionButton("complete-treatment", treatment.id, "Bitir") : actionButton("reactivate-treatment", treatment.id, "AktifleÅŸtir")}
-                ${actionButton("cancel-treatment", treatment.id, "Ä°ptal")}
-                ${actionButton("delete-treatment", treatment.id, "Sil")}
+                ${treatmentActions}
             </td>
         `;
         treatmentsBody.appendChild(row);
@@ -604,7 +804,7 @@ async function submitForm(form, url, data, messageId) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         });
-        message.textContent = "BaÅŸarÄ±yla kaydedildi.";
+        message.textContent = "Başarıyla kaydedildi.";
         form.reset();
         await loadDashboard();
     } catch (error) {
@@ -623,7 +823,7 @@ function renderOwnerSearchResults(owners) {
     results.innerHTML = owners.map(owner => `
         <div class="search-result">
             <strong>${escapeHtml(owner.firstName)} ${escapeHtml(owner.lastName)}</strong>
-            <small>${escapeHtml(owner.email)} Â· ${owner.active ? "Aktif" : "Pasif"}</small>
+            <small>${escapeHtml(owner.email)} · ${owner.active ? "Aktif" : "Pasif"}</small>
         </div>
     `).join("");
 }
@@ -639,7 +839,7 @@ function renderPetSearchResults(pets) {
     results.innerHTML = pets.map(pet => `
         <div class="search-result">
             <strong>${escapeHtml(pet.name)}</strong>
-            <small>${escapeHtml(pet.species)} Â· ${escapeHtml(pet.breed || "Irk bilgisi yok")}</small>
+            <small>${escapeHtml(pet.species)} · ${escapeHtml(pet.breed || "Irk bilgisi yok")}</small>
         </div>
     `).join("");
 }
@@ -683,6 +883,8 @@ function attachFormHandlers() {
         return;
     }
     formHandlersAttached = true;
+
+    document.getElementById("logout-button")?.addEventListener("click", logout);
 
     document.getElementById("create-owner-form")?.addEventListener("submit", event => {
         event.preventDefault();
@@ -835,7 +1037,7 @@ function attachFormHandlers() {
                 })
             });
 
-            message.textContent = "Tedavi gÃ¼ncellendi.";
+            message.textContent = "Tedavi güncellendi.";
             document.getElementById("treatment-edit-form").classList.remove("visible-form");
             await loadDashboard();
         } catch (error) {
@@ -916,14 +1118,16 @@ function attachFormHandlers() {
     });
 
     document.getElementById("open-owner-form")?.addEventListener("click", () => {
-        document.getElementById("owner-form")?.scrollIntoView({ behavior: "smooth" });
+        showPage("owners");
     });
 }
 
 async function initDashboard() {
+    setupPageNavigation();
     attachFormHandlers();
     try {
         await loadCurrentUser();
+        applyRoleBasedInterface();
         await loadDashboard();
     } catch (error) {
         console.error(error);

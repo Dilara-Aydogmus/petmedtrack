@@ -23,6 +23,10 @@ public class ClinicService {
                         new ResourceNotFoundException("Clinic not found: " + id));
     }
 
+    public Clinic findByName(String name){
+        return clinicRepository.findByName(name);
+    }
+
     public Clinic create(String name, String address, String phoneNumber) {
         Clinic clinic = new Clinic(name, address, phoneNumber);
         return clinicRepository.save(clinic);

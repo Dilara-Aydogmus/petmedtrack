@@ -14,4 +14,6 @@ public interface OwnerRepository extends JpaRepository<Owner, Long>, JpaSpecific
     List<Owner> findByClinicIdAndActiveTrue(Long clinicId);
     Owner findOwnerByIdAndClinicId(Long id, Long clinicId);
     Owner findOwnerById(Long id);
+
+    Owner findByFirstNameAndLastNameAndClinicId(String firstName, String lastName, Long clinicId);
 }

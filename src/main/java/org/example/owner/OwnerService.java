@@ -1,9 +1,12 @@
 package org.example.owner;
+import org.example.auth.User;
 import org.example.common.ResourceNotFoundException;
 import org.example.owner.dto.CreateOwnerRequest;
 import org.example.treatment.Treatment;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.example.pet.Pet;
@@ -43,12 +46,29 @@ public class OwnerService {
     }
     @Cacheable(value = "owners")
     public List<Owner> findAll() {
+        User currentUser = currentUserService.getCurrentUser();
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Owner owner = currentUserService.getCurrentOwner();
+            List<Owner> owners = new ArrayList<>();
+            owners.add(owner);
+            return owners;
+        }
+
         Long clinicId = currentUserService.getCurrentClinicId();
         return ownerRepository.findByClinicIdAndActiveTrue(clinicId);
     }
 
     @Cacheable(value = "owners", key = "#id")
     public Owner findById(Long id){
+        User currentUser = currentUserService.getCurrentUser();
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Owner currentOwner = currentUserService.getCurrentOwner();
+            if(!currentOwner.getId().equals(id)){
+                throw new ResourceNotFoundException("Owner not found in current scope: " + id);
+            }
+            return currentOwner;
+        }
+
         Long clinicId = currentUserService.getCurrentClinicId();
         Owner owner = ownerRepository.findOwnerByIdAndClinicId(id, clinicId);
 
@@ -92,6 +112,30 @@ public class OwnerService {
 
 
     }
+
+    public Owner createForUserRegistration(CreateOwnerRequest request, Clinic clinic){
+        if(ownerRepository.existsByEmail(request.getEmail())){
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if(ownerRepository.existsByPhoneNumber(request.getPhoneNumber())){
+            throw new IllegalArgumentException("Phone number already exists");
+        }
+        Owner owner = new Owner(request.getFirstName(),
+                                request.getLastName(),
+                                request.getEmail(),
+                                request.getPhoneNumber(),
+                                clinic);
+        Owner savedOwner = ownerRepository.save(owner);
+        EmailMessage emailMessage = new EmailMessage(
+                savedOwner.getEmail(), "PetMedTrack'e hoşgeldiniz",
+                "Merhaba" + savedOwner.getFirstName() + ",\n\nPetMedTrack hesabınız başarıyla oluşturuldu."
+        );
+
+        emailProducer.sendEmail(emailMessage);
+        return savedOwner;
+    }
+
+
 
     @CacheEvict(value = "owners", allEntries = true)
     public Owner update(Long id, CreateOwnerRequest request){
@@ -166,6 +210,31 @@ public class OwnerService {
     }
 
     public List<Owner> search(String name, Boolean active) {
+        User currentUser = currentUserService.getCurrentUser();
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Owner currentOwner = currentUserService.getCurrentOwner();
+            boolean nameMatches = true;
+            boolean activeMatches = true;
+
+            if(name != null && !name.isBlank()){
+                String searchText = name.toLowerCase();
+                String firstName = currentOwner.getFirstName().toLowerCase();
+                String lastName = currentOwner.getLastName().toLowerCase();
+
+                nameMatches = firstName.contains(searchText) || lastName.contains(searchText);
+            }
+
+            if(active != null){
+                activeMatches = currentOwner.isActive() == active;
+            }
+
+            List<Owner> owners = new ArrayList<>();
+            if(nameMatches && activeMatches){
+                owners.add(currentOwner);
+            }
+            return owners;
+        }
+
         Long clinicId = currentUserService.getCurrentClinicId();
 
         Specification<Owner> specification =
@@ -174,5 +243,14 @@ public class OwnerService {
                         .and(OwnerClinicSpecification.belongsToClinic(clinicId));
 
         return ownerRepository.findAll(specification);
+    }
+
+    public Owner findByName(String firstName, String lastName){
+        Long clinicId = currentUserService.getCurrentClinicId();
+        Owner owner = ownerRepository.findByFirstNameAndLastNameAndClinicId(firstName, lastName, clinicId);
+        if(owner == null){
+            throw new ResourceNotFoundException("Owner not found: " + firstName + " " + lastName);
+        }
+        return owner;
     }
 }

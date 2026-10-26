@@ -1,5 +1,6 @@
 package org.example.treatment;
 
+import org.example.auth.User;
 import org.example.common.ResourceNotFoundException;
 import org.example.disease.Disease;
 import org.example.disease.DiseaseRepository;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 
+
 @Service
 public class TreatmentService {
     private final TreatmentRepository treatmentRepository;
@@ -47,16 +49,30 @@ public class TreatmentService {
 
     @Cacheable(value = "treatments")
     public List<Treatment> findAll() {
+        User currentUser = currentUserService.getCurrentUser();
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Long ownerId = currentUserService.getCurrentOwner().getId();
+            return treatmentRepository.findByPetOwnerId(ownerId);
+        }
     Long clinicId  = currentUserService.getCurrentClinicId();
     return treatmentRepository.findByPetOwnerClinicId(clinicId);
         }
 
     @Cacheable(value = "treatments", key = "#id")
     public Treatment findById(Long id) {
-        Long clinicId = currentUserService.getCurrentClinicId();
-        Treatment treatment = treatmentRepository.findByIdAndPetOwnerClinicId(id, clinicId);
+        User currentUser = currentUserService.getCurrentUser();
+        Treatment treatment;
+        if("USER".equalsIgnoreCase(currentUser.getRole())){
+            Long ownerId = currentUserService.getCurrentOwner().getId();
+            treatment = treatmentRepository.findByIdAndPetOwnerId(id, ownerId);
+        }
+        else{
+            Long clinicId = currentUserService.getCurrentClinicId();
+            treatment = treatmentRepository.findByIdAndPetOwnerClinicId(id, clinicId);
+        }
+
         if(treatment == null){
-            throw new ResourceNotFoundException("Treatment not found in current clinic: " + id);
+            throw new ResourceNotFoundException("Treatment not found in  current access scope: " + id);
         }
         return treatment;
     }
