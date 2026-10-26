@@ -37,6 +37,11 @@ pipeline {
                         $notificationTag = "$env:NOTIFICATION_IMAGE_REPOSITORY`:$env:BUILD_NUMBER"
                         $notificationLatest = "$env:NOTIFICATION_IMAGE_REPOSITORY`:latest"
 
+                        if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_USERNAME)) { throw 'Docker Hub username was not bound' }
+                        if ([string]::IsNullOrWhiteSpace($env:DOCKERHUB_TOKEN)) { throw 'Docker Hub token was not bound' }
+                        Write-Output "Docker Hub username bound: $env:DOCKERHUB_USERNAME"
+                        Write-Output "Docker Hub token length: $($env:DOCKERHUB_TOKEN.Length)"
+
                         $env:DOCKERHUB_TOKEN |
                             docker login --username $env:DOCKERHUB_USERNAME --password-stdin
                         if ($LASTEXITCODE -ne 0) { throw 'Docker Hub login failed' }
