@@ -39,13 +39,20 @@ pipeline {
 
                         $env:DOCKERHUB_TOKEN |
                             docker login --username $env:DOCKERHUB_USERNAME --password-stdin
+                        if ($LASTEXITCODE -ne 0) { throw 'Docker Hub login failed' }
 
                         docker build -t $appTag -t $appLatest .
+                        if ($LASTEXITCODE -ne 0) { throw 'Application image build failed' }
                         docker build -t $notificationTag -t $notificationLatest ./notification-service
+                        if ($LASTEXITCODE -ne 0) { throw 'Notification image build failed' }
                         docker push $appTag
+                        if ($LASTEXITCODE -ne 0) { throw 'Application image push failed' }
                         docker push $appLatest
+                        if ($LASTEXITCODE -ne 0) { throw 'Application latest image push failed' }
                         docker push $notificationTag
+                        if ($LASTEXITCODE -ne 0) { throw 'Notification image push failed' }
                         docker push $notificationLatest
+                        if ($LASTEXITCODE -ne 0) { throw 'Notification latest image push failed' }
                         docker logout
                     '''
                 }
@@ -67,7 +74,7 @@ pipeline {
                     $notificationImage = "$env:NOTIFICATION_IMAGE_REPOSITORY`:latest"
 
                     kubectl set image deployment/app `
-                        pet-info-health-service=$appImage `
+                        petmedtrack-app=$appImage `
                         --namespace $env:K8S_NAMESPACE
 
                     kubectl set image deployment/notification-service `
