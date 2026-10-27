@@ -394,7 +394,10 @@ function applyRoleBasedInterface() {
         .replace(/^ROLE_/, "");
     const isVet = role === "VET";
     const vetOnlyElements = [
+        'a.nav-item[href="#owners"]',
         "#open-owner-form",
+        "#owner-search-panel",
+        "#owners-view",
         ".quick-panel",
         "#owner-form",
         "#veterinarian-form",
