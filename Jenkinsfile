@@ -40,7 +40,7 @@ pipeline {
             steps {
                 withCredentials([
                     string(
-                        credentialsId: 'dockerhub-token-v2',
+                        credentialsId: 'jenkins-petmedtrack',
                         variable: 'DOCKERHUB_TOKEN'
                     )
                 ]) {
