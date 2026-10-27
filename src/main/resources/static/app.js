@@ -734,15 +734,26 @@ async function handleManagementAction(action, id, data) {
 }
 
 async function loadDashboard() {
-    const [owners, pets, medications, treatments, clinics, veterinarians, diseases] = await Promise.all([
+    const role = String(currentUser?.role || "")
+        .trim()
+        .toUpperCase()
+        .replace(/^ROLE_/, "");
+    const canLoadClinicData = role === "VET" || role === "ADMIN";
+
+    const [owners, pets, medications, treatments] = await Promise.all([
         request("/api/owners"),
         request("/api/pets"),
         request("/api/medications"),
-        request("/api/treatments"),
-        request("/api/clinics"),
-        request("/api/veterinarians"),
-        request("/api/diseases")
+        request("/api/treatments")
     ]);
+
+    const [clinics, veterinarians, diseases] = canLoadClinicData
+        ? await Promise.all([
+            request("/api/clinics"),
+            request("/api/veterinarians"),
+            request("/api/diseases")
+        ])
+        : [[], [], []];
 
     fillClinicSelect("owner-clinic-id", clinics);
     fillClinicSelect("veterinarian-clinic-id", clinics);

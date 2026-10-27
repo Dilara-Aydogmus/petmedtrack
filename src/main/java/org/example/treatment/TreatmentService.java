@@ -14,7 +14,6 @@ import org.example.treatment.dto.CreateTreatmentRequest;
 import org.example.treatment.dto.TreatmentMedicationRequest;
 import org.example.treatment.dto.UpdateTreatmentRequest;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -47,7 +46,6 @@ public class TreatmentService {
         this.currentUserService = currentUserService;
     }
 
-    @Cacheable(value = "treatments")
     public List<Treatment> findAll() {
         User currentUser = currentUserService.getCurrentUser();
         if("USER".equalsIgnoreCase(currentUser.getRole())){
@@ -58,7 +56,6 @@ public class TreatmentService {
     return treatmentRepository.findByPetOwnerClinicId(clinicId);
         }
 
-    @Cacheable(value = "treatments", key = "#id")
     public Treatment findById(Long id) {
         User currentUser = currentUserService.getCurrentUser();
         Treatment treatment;
@@ -187,7 +184,6 @@ public class TreatmentService {
         treatmentRepository.delete(treatment);
     }
 
-    @Cacheable(value = "treatmentsByPet", key = "#petId")
     public List<Treatment> findByPetId(Long petId){
         Pet pet = petService.findById(petId);
         return treatmentRepository.findByPetId(pet.getId());

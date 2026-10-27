@@ -7,7 +7,6 @@ import org.example.pet.dto.CreatePetRequest;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.example.pet.specification.PetNameSpecification;
 import org.example.pet.specification.PetSpeciesSpecification;
@@ -28,7 +27,6 @@ public class PetService {
         this.ownerService = ownerService;
     }
 
-    @Cacheable(value = "pets")
     public List<Pet> findAll() {
         User currentUser = currentUserService.getCurrentUser();
         if("USER".equalsIgnoreCase(currentUser.getRole())){
@@ -39,7 +37,6 @@ public class PetService {
         return petRepository.findByOwnerClinicId(clinicId);
     }
 
-    @Cacheable(value = "pets", key = "#id")
     public Pet findById(Long id) {
         User currentUser = currentUserService.getCurrentUser();
         Pet pet;
@@ -129,7 +126,6 @@ public class PetService {
         return petRepository.findAll(combinedSpecification);
     }
 
-    @Cacheable(value = "petsByOwner", key = "#ownerId")
     public List<Pet> findByOwnerId(Long ownerId){
         Owner owner = ownerService.findById(ownerId);
         return petRepository.findByOwnerId(owner.getId());

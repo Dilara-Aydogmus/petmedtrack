@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.example.notification.EmailMessage;
 import org.example.notification.EmailProducer;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.example.owner.specification.OwnerActiveSpecification;
 import org.example.owner.specification.OwnerNameSpecification;
 import org.springframework.data.jpa.domain.Specification;
@@ -44,7 +43,6 @@ public class OwnerService {
         this.clinicService = clinicService;
         this.currentUserService = currentUserService;
     }
-    @Cacheable(value = "owners")
     public List<Owner> findAll() {
         User currentUser = currentUserService.getCurrentUser();
         if("USER".equalsIgnoreCase(currentUser.getRole())){
@@ -58,7 +56,6 @@ public class OwnerService {
         return ownerRepository.findByClinicIdAndActiveTrue(clinicId);
     }
 
-    @Cacheable(value = "owners", key = "#id")
     public Owner findById(Long id){
         User currentUser = currentUserService.getCurrentUser();
         if("USER".equalsIgnoreCase(currentUser.getRole())){

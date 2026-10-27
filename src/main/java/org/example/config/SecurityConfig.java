@@ -25,11 +25,14 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter){
                         "/app.js",
                         "/api/auth/**",
                         "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/owners/search", "/api/pets/search").hasAnyRole("VET", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/owners/search", "/api/pets/search",
+                                "/api/clinics", "/api/clinics/**",
+                                "/api/veterinarians", "/api/veterinarians/**",
+                                "/api/diseases", "/api/diseases/**" ).hasAnyRole("VET", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("USER","VET","ADMIN")
                         .requestMatchers(HttpMethod.POST,"/api/**").hasAnyRole("VET","ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/**").hasAnyRole("VET","ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/owners/*/activate").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/owners/*/activate").hasAnyRole("VET", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/**").hasAnyRole("VET", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/owners/*/permanent").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/**").hasAnyRole("VET", "ADMIN")
