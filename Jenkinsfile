@@ -52,13 +52,25 @@ pipeline {
 
                         Write-Output "Logging into Docker Hub..."
 
-                        $env:DOCKERHUB_TOKEN | docker login `
-                            --username dilaraydgms `
-                            --password-stdin
-
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Docker Hub login failed"
+                        $loginInfo = New-Object System.Diagnostics.ProcessStartInfo
+                        $loginInfo.FileName = 'docker'
+                        $loginInfo.Arguments = 'login --username dilaraydgms --password-stdin'
+                        $loginInfo.UseShellExecute = $false
+                        $loginInfo.RedirectStandardInput = $true
+                        $loginInfo.RedirectStandardOutput = $true
+                        $loginInfo.RedirectStandardError = $true
+                        $loginProcess = New-Object System.Diagnostics.Process
+                        $loginProcess.StartInfo = $loginInfo
+                        [void]$loginProcess.Start()
+                        $loginProcess.StandardInput.WriteLine($env:DOCKERHUB_TOKEN.Trim())
+                        $loginProcess.StandardInput.Close()
+                        $loginOutput = $loginProcess.StandardOutput.ReadToEnd()
+                        $loginError = $loginProcess.StandardError.ReadToEnd()
+                        $loginProcess.WaitForExit()
+                        if ($loginProcess.ExitCode -ne 0) {
+                            throw "Docker Hub login failed: $loginError"
                         }
+                        Write-Output $loginOutput
 
 
                         Write-Output "Building main application image..."
