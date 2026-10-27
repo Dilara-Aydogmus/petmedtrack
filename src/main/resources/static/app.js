@@ -388,8 +388,12 @@ function actionButton(action, id, label) {
 }
 
 function applyRoleBasedInterface() {
-    const canManage = currentUser?.role === "VET" || currentUser?.role === "ADMIN";
-    const managementOnlyElements = [
+    const role = String(currentUser?.role || "")
+        .trim()
+        .toUpperCase()
+        .replace(/^ROLE_/, "");
+    const isVet = role === "VET";
+    const vetOnlyElements = [
         "#open-owner-form",
         ".quick-panel",
         "#owner-form",
@@ -402,14 +406,19 @@ function applyRoleBasedInterface() {
         "#treatment-edit-form"
     ];
 
-    managementOnlyElements.forEach(selector => {
+    vetOnlyElements.forEach(selector => {
         document.querySelectorAll(selector).forEach(element => {
-            element.classList.toggle("role-hidden", !canManage);
+            element.classList.toggle("role-hidden", !isVet);
+            if (isVet) {
+                element.style.removeProperty("display");
+            } else {
+                element.style.setProperty("display", "none", "important");
+            }
         });
     });
 
     const intro = document.querySelector(".welcome-row .intro");
-    if (intro && !canManage) {
+    if (intro && !isVet) {
         intro.textContent = "Kliniğin veteriner ekibi tarafından eklenen kayıtları görüntülüyorsun.";
     }
 }
