@@ -39,10 +39,9 @@ pipeline {
         stage('Docker Build and Push') {
             steps {
                 withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKERHUB_USERNAME',
-                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    string(
+                        credentialsId: 'dockerhub-token',
+                        variable: 'DOCKERHUB_TOKEN'
                     )
                 ]) {
 
@@ -54,7 +53,7 @@ pipeline {
                         Write-Output "Logging into Docker Hub..."
 
                         $env:DOCKERHUB_TOKEN | docker login `
-                            --username $env:DOCKERHUB_USERNAME `
+                            --username dilaraydgms `
                             --password-stdin
 
                         if ($LASTEXITCODE -ne 0) {
