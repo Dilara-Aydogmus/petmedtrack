@@ -39,9 +39,10 @@ pipeline {
         stage('Docker Build and Push') {
             steps {
                 withCredentials([
-                    string(
+                    usernamePassword(
                         credentialsId: 'jenkins-petmedtrack',
-                        variable: 'DOCKERHUB_TOKEN'
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
                     )
                 ]) {
 
@@ -54,7 +55,7 @@ pipeline {
 
                         $loginInfo = New-Object System.Diagnostics.ProcessStartInfo
                         $loginInfo.FileName = 'docker'
-                        $loginInfo.Arguments = 'login --username dilaraydgms --password-stdin'
+                        $loginInfo.Arguments = 'login --username ' + $env:DOCKERHUB_USERNAME + ' --password-stdin'
                         $loginInfo.UseShellExecute = $false
                         $loginInfo.RedirectStandardInput = $true
                         $loginInfo.RedirectStandardOutput = $true
