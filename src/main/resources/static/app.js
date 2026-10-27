@@ -392,11 +392,12 @@ function applyRoleBasedInterface() {
         .trim()
         .toUpperCase()
         .replace(/^ROLE_/, "");
-    const isVet = role === "VET";
+    const canManage = role === "VET" || role === "ADMIN";
     const vetOnlyElements = [
         'a.nav-item[href="#owners"]',
         "#open-owner-form",
         "#owner-search-panel",
+        "#pet-search-panel",
         "#owners-view",
         ".quick-panel",
         "#owner-form",
@@ -411,8 +412,8 @@ function applyRoleBasedInterface() {
 
     vetOnlyElements.forEach(selector => {
         document.querySelectorAll(selector).forEach(element => {
-            element.classList.toggle("role-hidden", !isVet);
-            if (isVet) {
+            element.classList.toggle("role-hidden", !canManage);
+            if (canManage) {
                 element.style.removeProperty("display");
             } else {
                 element.style.setProperty("display", "none", "important");
@@ -421,7 +422,7 @@ function applyRoleBasedInterface() {
     });
 
     const intro = document.querySelector(".welcome-row .intro");
-    if (intro && !isVet) {
+    if (intro && !canManage) {
         intro.textContent = "Kliniğin veteriner ekibi tarafından eklenen kayıtları görüntülüyorsun.";
     }
 }
@@ -635,7 +636,8 @@ async function updatePet(pet) {
             weight: pet.weight,
             height: pet.height,
             neutered: pet.neutered,
-            ownerId: pet.owner.id
+            ownerFirstName: pet.owner.firstName,
+            ownerLastName: pet.owner.lastName
         })
     });
 }
@@ -931,6 +933,13 @@ function attachFormHandlers() {
 
     document.getElementById("create-pet-form")?.addEventListener("submit", event => {
         event.preventDefault();
+        const ownerId = Number(document.getElementById("owner-id").value);
+        const owner = dashboardData.owners.find(item => item.id === ownerId);
+        if (!owner) {
+            document.getElementById("pet-message").textContent = "Bu ID ile sahip bulunamadı.";
+            return;
+        }
+
         submitForm(event.target, "/api/pets", {
             name: document.getElementById("pet-name").value,
             species: document.getElementById("species").value,
@@ -948,7 +957,8 @@ function attachFormHandlers() {
                 ? Number(document.getElementById("height").value)
                 : null,
             neutered: document.getElementById("neutered").checked,
-            ownerId: Number(document.getElementById("owner-id").value)
+            ownerFirstName: owner.firstName,
+            ownerLastName: owner.lastName
         }, "pet-message");
     });
 
@@ -1059,11 +1069,20 @@ function attachFormHandlers() {
 
     document.getElementById("create-treatment-form")?.addEventListener("submit", event => {
         event.preventDefault();
+        const diseaseIds = document.getElementById("treatment-disease-ids")
+            .value
+            .split(",")
+            .map(value => Number(value.trim()))
+            .filter(value => Number.isInteger(value) && value > 0);
+
         submitForm(event.target, "/api/treatments", {
             petId: Number(document.getElementById("treatment-pet-id").value),
-            medicationId: Number(document.getElementById("treatment-medication-id").value),
-            dosage: document.getElementById("dosage").value,
-            frequency: document.getElementById("frequency").value,
+            diseaseIds,
+            medications: [{
+                medicationId: Number(document.getElementById("treatment-medication-id").value),
+                dosage: document.getElementById("dosage").value,
+                frequency: document.getElementById("frequency").value
+            }],
             startDate: document.getElementById("start-date").value,
             endDate: document.getElementById("end-date").value || null
         }, "treatment-message");
