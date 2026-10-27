@@ -23,8 +23,9 @@ public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter){
                         "/index.html",
                         "/style.css",
                         "/app.js",
-                        "/api/auth/**",
                         "/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/owners/search", "/api/pets/search",
                                 "/api/clinics", "/api/clinics/**",
                                 "/api/veterinarians", "/api/veterinarians/**",

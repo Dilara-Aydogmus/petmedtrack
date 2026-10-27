@@ -399,6 +399,7 @@ function applyRoleBasedInterface() {
         "#owner-search-panel",
         "#pet-search-panel",
         "#owners-view",
+        ".stat-card.plum-card",
         ".quick-panel",
         "#owner-form",
         "#veterinarian-form",
