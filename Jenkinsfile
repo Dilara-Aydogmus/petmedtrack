@@ -51,10 +51,11 @@ pipeline {
 
 
                         Write-Output "Logging into Docker Hub..."
+                        docker logout docker.io 2>$null | Out-Null
 
                         $loginInfo = New-Object System.Diagnostics.ProcessStartInfo
                         $loginInfo.FileName = 'docker'
-                        $loginInfo.Arguments = 'login --username dilaraydgms --password-stdin'
+                        $loginInfo.Arguments = 'login docker.io --username dilaraydgms --password-stdin'
                         $loginInfo.UseShellExecute = $false
                         $loginInfo.RedirectStandardInput = $true
                         $loginInfo.RedirectStandardOutput = $true
