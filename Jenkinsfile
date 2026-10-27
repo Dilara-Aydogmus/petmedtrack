@@ -38,86 +38,34 @@ pipeline {
 
         stage('Docker Build and Push') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-petmedtrack',
-                        usernameVariable: 'DOCKERHUB_USERNAME',
-                        passwordVariable: 'DOCKERHUB_TOKEN'
-                    )
-                ]) {
+                powershell '''
+                    $appImage = "${env:IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
+                    $notificationImage = "${env:NOTIFICATION_IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
 
-                    powershell '''
-                        $appImage = "${env:IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
-                        $notificationImage = "${env:NOTIFICATION_IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
+                    Write-Output "Building main application image..."
+                    docker build -t $appImage .
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Main application Docker build failed"
+                    }
 
+                    Write-Output "Building notification service image..."
+                    docker build -t $notificationImage ./notification-service
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Notification Docker build failed"
+                    }
 
-                        Write-Output "Logging into Docker Hub..."
-                        docker logout docker.io 2>$null | Out-Null
+                    Write-Output "Pushing main application image using the existing Docker login..."
+                    docker push $appImage
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Main application Docker push failed. Check Docker Desktop login for the Jenkins Windows account."
+                    }
 
-                        $loginInfo = New-Object System.Diagnostics.ProcessStartInfo
-                        $loginInfo.FileName = 'docker'
-                        $loginInfo.Arguments = 'login docker.io --username ' + $env:DOCKERHUB_USERNAME + ' --password-stdin'
-                        $loginInfo.UseShellExecute = $false
-                        $loginInfo.RedirectStandardInput = $true
-                        $loginInfo.RedirectStandardOutput = $true
-                        $loginInfo.RedirectStandardError = $true
-                        $loginProcess = New-Object System.Diagnostics.Process
-                        $loginProcess.StartInfo = $loginInfo
-                        [void]$loginProcess.Start()
-                        $loginProcess.StandardInput.WriteLine($env:DOCKERHUB_TOKEN.Trim())
-                        $loginProcess.StandardInput.Close()
-                        $loginOutput = $loginProcess.StandardOutput.ReadToEnd()
-                        $loginError = $loginProcess.StandardError.ReadToEnd()
-                        $loginProcess.WaitForExit()
-                        if ($loginProcess.ExitCode -ne 0) {
-                            throw "Docker Hub login failed: $loginError"
-                        }
-                        Write-Output $loginOutput
-
-
-                        Write-Output "Building main application image..."
-
-                        docker build `
-                            -t $appImage `
-                            .
-
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Main application Docker build failed"
-                        }
-
-
-                        Write-Output "Building notification service image..."
-
-                        docker build `
-                            -t $notificationImage `
-                            ./notification-service
-
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Notification Docker build failed"
-                        }
-
-
-                        Write-Output "Pushing main application image..."
-
-                        docker push $appImage
-
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Main application Docker push failed"
-                        }
-
-
-                        Write-Output "Pushing notification service image..."
-
-                        docker push $notificationImage
-
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Notification Docker push failed"
-                        }
-
-
-                        docker logout
-                    '''
-                }
+                    Write-Output "Pushing notification service image..."
+                    docker push $notificationImage
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Notification Docker push failed. Check Docker Desktop login for the Jenkins Windows account."
+                    }
+                '''
             }
         }
 
