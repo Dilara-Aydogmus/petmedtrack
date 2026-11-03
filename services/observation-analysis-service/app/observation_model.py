@@ -32,80 +32,38 @@ def normalize_spaces(cleaned_text):
 
 
 
-def build_word_to_id(training_texts):
-    word_to_id = {"<PAD>": 0, "<UNKNOWN>": 1}
-
-    for training_text in training_texts:
-        preprocessed_training_text = preprocess_text(training_text)
-        words = preprocessed_training_text.split()
-
-        for word in words:
-            if word not in word_to_id:
-                word_to_id[word] = len(word_to_id)
-
-    return word_to_id
-
-
-def encode_text(text, word_to_id):
-    preprocessed_text = preprocess_text(text)
-    words = preprocessed_text.split()
-
-    token_ids = []
-
-    for word in words:
-        if word in word_to_id:
-            token_id = word_to_id[word]
-        else:
-            token_id = word_to_id["<UNKNOWN>"]
-
-        token_ids.append(token_id)
-
-    return token_ids
-
-
-def pad_sequence(token_ids, max_length):
-    padded_token_ids = token_ids.copy()
-
-    while len(padded_token_ids) < max_length:
-        padded_token_ids.append(0)
-
-    return padded_token_ids
-
-
-
-
-def build_bpe_word_frequencies(training_texts):
-    word_frequencies = {}
+def build_bpe_token_sequence_frequencies(training_texts):
+    token_sequence_frequencies = {}
 
     for training_text in training_texts:
         preprocessed_text = preprocess_text(training_text)
         words = preprocessed_text.split()
 
         for word in words:
-            character_sequence = tuple(word)
+            token_sequence = tuple(word)
 
-            if character_sequence in word_frequencies:
-                word_frequencies[character_sequence] += 1
+            if token_sequence in token_sequence_frequencies:
+                token_sequence_frequencies[token_sequence] += 1
             else:
-                word_frequencies[character_sequence] = 1
+                token_sequence_frequencies[token_sequence] = 1
 
-    return word_frequencies
+    return token_sequence_frequencies
 
 
 
-def count_bpe_pairs(word_frequencies):
+def count_bpe_pairs(token_sequence_frequencies):
     pair_frequencies = {}
 
-    for character_sequence in word_frequencies:
-        word_frequency = word_frequencies[character_sequence]
+    for token_sequence in token_sequence_frequencies:
+        sequence_frequency = token_sequence_frequencies[token_sequence]
 
-        for index in range(len(character_sequence) - 1):
-            pair = (character_sequence[index], character_sequence[index + 1])
+        for index in range(len(token_sequence) - 1):
+            pair = (token_sequence[index], token_sequence[index + 1])
 
             if pair in pair_frequencies:
-                pair_frequencies[pair] += word_frequency
+                pair_frequencies[pair] += sequence_frequency
             else:
-                pair_frequencies[pair] = word_frequency
+                pair_frequencies[pair] = sequence_frequency
 
     return pair_frequencies
 
@@ -125,3 +83,168 @@ def find_most_frequent_pair(pair_frequencies):
             highest_frequency = current_frequency
 
     return most_frequent_pair
+
+
+
+def merge_pair_in_sequence(sequence, merge_rule):
+    merged_sequence = []
+    index = 0
+
+    while index < len(sequence):
+        pair_matches = False
+        has_next_piece = index + 1 < len(sequence)
+
+        if has_next_piece:
+            current_piece = sequence[index]
+            next_piece = sequence[index + 1]
+
+            first_piece_matches = current_piece == merge_rule[0]
+            second_piece_matches = next_piece == merge_rule[1]
+
+            if first_piece_matches:
+                if second_piece_matches:
+                    pair_matches = True
+
+        if pair_matches:
+            first_piece = merge_rule[0]
+            second_piece = merge_rule[1]
+            merged_piece = first_piece + second_piece
+
+            merged_sequence.append(merged_piece)
+            index = index + 2
+        else:
+            current_piece = sequence[index]
+            merged_sequence.append(current_piece)
+            index = index + 1
+
+    return tuple(merged_sequence)
+
+
+
+def merge_pair_in_token_sequence_frequencies(
+    token_sequence_frequencies,
+    merge_rule
+):
+    updated_token_sequence_frequencies = {}
+
+    for token_sequence in token_sequence_frequencies:
+        sequence_frequency = token_sequence_frequencies[token_sequence]
+
+        merged_token_sequence = merge_pair_in_sequence(
+            token_sequence,
+            merge_rule
+        )
+
+        if merged_token_sequence in updated_token_sequence_frequencies:
+            old_frequency = updated_token_sequence_frequencies[merged_token_sequence]
+            updated_token_sequence_frequencies[merged_token_sequence] = (
+                old_frequency + sequence_frequency
+            )
+        else:
+            updated_token_sequence_frequencies[merged_token_sequence] = (
+                sequence_frequency
+            )
+
+    return updated_token_sequence_frequencies
+
+
+
+
+def learn_bpe_merges(training_texts, number_of_merges):
+    token_sequence_frequencies = build_bpe_token_sequence_frequencies(
+        training_texts
+    )
+    learned_merges = []
+
+    while len(learned_merges) < number_of_merges:
+        pair_frequencies = count_bpe_pairs(token_sequence_frequencies)
+        merge_rule = find_most_frequent_pair(pair_frequencies)
+
+        if merge_rule is None:
+            break
+
+        token_sequence_frequencies = merge_pair_in_token_sequence_frequencies(
+            token_sequence_frequencies,
+            merge_rule
+        )
+        learned_merges.append(merge_rule)
+
+    return learned_merges
+
+
+
+def tokenize_text_with_bpe(text, learned_merges):
+    preprocessed_text = preprocess_text(text)
+    words = preprocessed_text.split()
+    tokenized_word_sequences = []
+
+    for word in words:
+        merged_token_sequence = tuple(word)
+
+        for merge_rule in learned_merges:
+            merged_token_sequence = merge_pair_in_sequence(
+                merged_token_sequence,
+                merge_rule
+            )
+
+        tokenized_word_sequences.append(merged_token_sequence)
+
+    return tokenized_word_sequences
+
+
+
+def build_token_to_id(training_texts, learned_merges):
+    token_to_id = {
+    "<PAD>": 0,
+    "<UNKNOWN>": 1,
+    "<WORD_BOUNDARY>": 2}
+
+    for training_text in training_texts:
+        tokenized_word_sequences = tokenize_text_with_bpe(
+            training_text,
+            learned_merges
+        )
+        for token_sequence in tokenized_word_sequences:
+            for token in token_sequence:
+                if token not in token_to_id:
+                    token_to_id[token] = len(token_to_id)
+    return token_to_id
+
+
+def encode_text_with_bpe(text, learned_merges, token_to_id):
+    tokenized_word_sequences = tokenize_text_with_bpe(text, learned_merges)
+    token_ids = []
+    is_first_word = True
+
+    for token_sequence in tokenized_word_sequences:
+        if not is_first_word:
+            word_boundary_id = token_to_id["<WORD_BOUNDARY>"]
+            token_ids.append(word_boundary_id)
+
+        is_first_word = False
+
+        for token in token_sequence:
+            if token in token_to_id:
+                token_id = token_to_id[token]
+            else:
+                token_id = token_to_id["<UNKNOWN>"]
+
+            token_ids.append(token_id)
+    return token_ids
+
+
+
+def pad_token_ids(token_ids, max_length, token_to_id):
+    if len(token_ids)> max_length:
+        raise ValueError("Token sequence exceeds the max length.")
+
+    padded_token_ids = token_ids.copy()
+    padding_token_id = token_to_id["<PAD>"]
+
+    while len(padded_token_ids) < max_length:
+        padded_token_ids.append(padding_token_id)
+
+    return padded_token_ids
+
+
+
