@@ -23,15 +23,6 @@ pipeline {
                     }
                 '''
 
-                dir('notification-service') {
-                    powershell '''
-                        mvn -B clean package
-
-                        if ($LASTEXITCODE -ne 0) {
-                            throw "Notification service build failed"
-                        }
-                    '''
-                }
             }
         }
 
@@ -43,13 +34,13 @@ pipeline {
                     $notificationImage = "${env:NOTIFICATION_IMAGE_REPOSITORY}:$env:BUILD_NUMBER"
 
                     Write-Output "Building main application image..."
-                    docker build -t $appImage .
+                    docker build -t $appImage -f services/pet-info-health-service/Dockerfile services/pet-info-health-service
                     if ($LASTEXITCODE -ne 0) {
                         throw "Main application Docker build failed"
                     }
 
                     Write-Output "Building notification service image..."
-                    docker build -t $notificationImage ./notification-service
+                    docker build -t $notificationImage -f services/notification-service/Dockerfile services/notification-service
                     if ($LASTEXITCODE -ne 0) {
                         throw "Notification Docker build failed"
                     }
