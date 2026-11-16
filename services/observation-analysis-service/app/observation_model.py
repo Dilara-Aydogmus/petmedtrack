@@ -1,3 +1,7 @@
+from pathlib import Path
+import pandas as pd
+
+
 def preprocess_text(text):
     text = text.replace("İ", "i")
     text = text.replace("I", "ı")
@@ -247,4 +251,123 @@ def pad_token_ids(token_ids, max_length, token_to_id):
     return padded_token_ids
 
 
+def load_source_dataset():
+    service_folder = Path(__file__).parent.parent
+    dataset_path = Path(service_folder, "data", "hopepet_synthetic_dataset.csv")
 
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Training dataset not found: {dataset_path}")
+
+    dataset = pd.read_csv(dataset_path)
+    if dataset.empty:
+        raise ValueError("Training dataset is empty.")
+
+    return dataset
+
+
+def build_bpe_tokenizer(training_texts, number_of_merges):
+    learned_merges = learn_bpe_merges(training_texts, number_of_merges)
+    token_to_id = build_token_to_id(training_texts, learned_merges)
+    return learned_merges, token_to_id
+
+
+def find_maximum_encoded_text_length(training_texts, learned_merges, token_to_id):
+    maximum_sequence_length = 0
+
+    for training_text in training_texts:
+        token_ids = encode_text_with_bpe(training_text, learned_merges, token_to_id)
+
+        if len(token_ids) > maximum_sequence_length:
+            maximum_sequence_length = len(token_ids)
+
+    return maximum_sequence_length
+
+
+
+def convert_training_texts_to_padded_token_ids(training_texts, learned_merges, token_to_id, maximum_text_length):
+    encoded_training_texts = []
+
+    for training_text in training_texts:
+        token_ids = encode_text_with_bpe(training_text, learned_merges, token_to_id)
+
+        padded_token_ids = pad_token_ids(token_ids, maximum_text_length, token_to_id)
+
+        encoded_training_texts.append(padded_token_ids)
+
+    return encoded_training_texts
+
+
+
+def load_training_texts_and_labels():
+    source_dataset = load_source_dataset()
+    text_column_name = "user_question"
+    label_column_name = "urgency_level"
+
+    urgency_level_to_alert_level = {
+        "Low": "NO_ALERT",
+        "Medium": "NO_ALERT",
+        "High": "VET_ALERT",
+        "Emergency": "VET_ALERT"
+    }
+
+    training_texts = []
+    training_labels = []
+
+    for dataset_row in source_dataset.to_dict(orient="records"):
+        text_value = dataset_row[text_column_name]
+        label_value = dataset_row[label_column_name]
+
+        if pd.notna(text_value) and pd.notna(label_value):
+            training_text = str(text_value).strip()
+            training_label = str(label_value).strip()
+
+            if training_text and training_label:
+                alert_level = urgency_level_to_alert_level[training_label]
+                training_texts.append(training_text)
+                training_labels.append(alert_level)
+
+
+    if not training_texts:
+        raise ValueError("The dataset does not contain any training examples.")
+
+    return training_texts, training_labels
+
+
+
+
+def build_label_to_id_dictionary(training_labels):
+    label_to_id_dictionary = {}
+
+    for training_label in training_labels:
+        if training_label not in label_to_id_dictionary:
+            label_to_id_dictionary[training_label] = len(label_to_id_dictionary)
+    return label_to_id_dictionary
+
+
+
+def convert_training_labels_to_ids(training_labels, label_to_id_dictionary):
+    training_label_ids = []
+
+    for training_label in training_labels:
+        training_label_ids.append(label_to_id_dictionary[training_label])
+
+    return training_label_ids
+
+
+
+def prepare_training_data(number_of_merges):
+    training_texts, training_labels = load_training_texts_and_labels()
+    learned_merges, token_to_id = build_bpe_tokenizer(training_texts, number_of_merges)
+    maximum_text_length = find_maximum_encoded_text_length(training_texts, learned_merges, token_to_id)
+    training_texts_as_padded_token_ids = convert_training_texts_to_padded_token_ids(training_texts, learned_merges, token_to_id, maximum_text_length)
+    label_to_id_dictionary = build_label_to_id_dictionary(training_labels)
+    training_label_ids = convert_training_labels_to_ids(training_labels, label_to_id_dictionary)
+
+    return {
+        "training_texts_as_padded_token_ids": training_texts_as_padded_token_ids,
+        "training_label_ids": training_label_ids,
+        "learned_merges": learned_merges,
+        "token_to_id": token_to_id,
+        "label_to_id_dictionary": label_to_id_dictionary,
+        "maximum_text_length": maximum_text_length
+    }
