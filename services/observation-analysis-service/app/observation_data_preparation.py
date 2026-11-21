@@ -363,7 +363,7 @@ def prepare_training_data(number_of_merges):
     label_to_id_dictionary = build_label_to_id_dictionary(training_labels)
     training_label_ids = convert_training_labels_to_ids(training_labels, label_to_id_dictionary)
 
-    return {
+    data_dictionary = {
         "training_texts_as_padded_token_ids": training_texts_as_padded_token_ids,
         "training_label_ids": training_label_ids,
         "learned_merges": learned_merges,
@@ -371,3 +371,4 @@ def prepare_training_data(number_of_merges):
         "label_to_id_dictionary": label_to_id_dictionary,
         "maximum_text_length": maximum_text_length
     }
+    return data_dictionary
