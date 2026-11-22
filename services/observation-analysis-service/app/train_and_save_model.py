@@ -13,5 +13,5 @@ def train_and_save_model():
     observation_model_saver.save_observation_model(trained_model,
                                                    observation_model_trainer.data_dictionary,
                                                    checkpoint_path,)
-    if __name__ == "__main__":
-        train_and_save_model()
+if __name__ == "__main__":
+    train_and_save_model()
