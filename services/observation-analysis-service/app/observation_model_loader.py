@@ -13,14 +13,14 @@ class ObservationModelLoader:
             if not checkpoint_path.exists():
                 raise FileNotFoundError(f"Model checkpoint not found: {checkpoint_path}")
 
-            checkpoint = torch.load(
+            model_checkpoint_dictionary = torch.load(
                 checkpoint_path,
                 map_location=device,
                 weights_only=True,
             )
 
 
-            model_config = checkpoint["model_config"]
+            model_config = model_checkpoint_dictionary["model_config"]
 
             model = ObservationAlertCNN(
                 vocabulary_size=model_config["vocabulary_size"],
@@ -30,6 +30,6 @@ class ObservationModelLoader:
                 padding_token_id=model_config["padding_token_id"],
             )
 
-            model.load_state_dict(checkpoint["model_state_dict"])
+            model.load_state_dict(model_checkpoint_dictionary["model_state_dict"])
             model.to(device)
             model.eval()

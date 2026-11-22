@@ -17,7 +17,7 @@ class ObservationModelSaver:
 
         model_checkpoint_dictionary = {
             "model_state_dict": model.state_dict(),
-            "model_config": model_config,
+            "model_config": model_config_dictionary,
             "learned_merges": data_dictionary["learned_merges"],
             "token_to_id": data_dictionary["token_to_id"],
             "label_to_id_dictionary": data_dictionary["label_to_id_dictionary"],
@@ -26,4 +26,4 @@ class ObservationModelSaver:
 
         save_destination = Path(file_path)
         save_destination.parent.mkdir(parents=True, exist_ok=True)
-        torch.save(checkpoint, save_destination)
+        torch.save(model_checkpoint_dictionary, save_destination)
