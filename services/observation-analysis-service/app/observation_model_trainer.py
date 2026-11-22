@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from app.observation_alert_cnn import ObservationAlertCNN
 from app.observation_data_preparation import prepare_training_data
 
-class ObservationTrainer:
+class ObservationModelTrainer:
     def __init__(self,
                  number_of_epochs=10,
                  batch_size=16,
